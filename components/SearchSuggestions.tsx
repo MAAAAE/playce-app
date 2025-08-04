@@ -4,6 +4,9 @@ import { Colors } from '@/constants/Colors';
 import { Place } from '@/data/mockData';
 import Animated, {FadeIn, FadeInDown, FadeOut} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import {Link} from "expo-router";
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface SearchSuggestionsProps {
     suggestions: Place[];
@@ -39,17 +42,27 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLo
                     data={suggestions}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => (
-                        <Animated.View entering={FadeInDown.duration(200).delay(index * 50)}>
-                            <TouchableOpacity style={styles.suggestionItem}>
-                                <View style={styles.iconContainer}>
-                                    <Ionicons name="location-sharp" size={24} color={Colors.text} />
-                                </View>
-                                <View style={styles.textContainer}>
-                                    <Text style={styles.nameText}>{item.name}</Text>
-                                    <Text style={styles.addressText}>{item.address}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        </Animated.View>
+                        <Link
+                            href={{
+                                pathname: "/spot/[id]",
+                                params: { id: item.id },
+                            }}
+                            asChild
+                        >
+                            <AnimatedTouchableOpacity
+                                style={styles.suggestionItem}
+                                entering={FadeInDown.duration(200).delay(index * 50)}
+                            >
+
+                                    <View style={styles.iconContainer}>
+                                        <Ionicons name="location-sharp" size={24} color={Colors.text} />
+                                    </View>
+                                    <View style={styles.textContainer}>
+                                        <Text style={styles.nameText}>{item.name}</Text>
+                                        <Text style={styles.addressText}>{item.address}</Text>
+                                    </View>
+                            </AnimatedTouchableOpacity>
+                        </Link>
                     )}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={false}

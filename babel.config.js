@@ -3,6 +3,7 @@ module.exports = function (api) {
     return {
         presets: ['babel-preset-expo'],
         plugins: [
+            '@babel/plugin-transform-class-static-block',
             // Reanimated 플러그인은 항상 마지막에 위치해야 합니다.
             'react-native-reanimated/plugin',
         ],

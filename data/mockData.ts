@@ -15,3 +15,15 @@ export const MOCK_PLACES: Place[] = [
     { id: '8', name: 'Dongdaemun Market', address: '253 Jangchungdan-ro, Jung-gu, Seoul' },
     { id: '9', name: 'Insadong', address: 'Insadong-gil, Jongno-gu, Seoul' },
 ];
+// ... (기존 Place 인터페이스 및 데이터)
+
+export interface ChartDataPoint {
+    day: number;
+    level: number; // 0 ~ 100 사이의 혼잡도 레벨
+}
+
+// 30일간의 임시 혼잡도 데이터 생성
+export const MOCK_CHART_DATA: ChartDataPoint[] = Array.from({ length: 30 }, (_, i) => ({
+    day: i + 1,
+    level: Math.random() * 70 + 15, // 15에서 85 사이의 랜덤 값
+}));
