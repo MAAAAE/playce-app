@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors'; // 상수 파일에서 색상 가져오기
+import { Colors } from '@/constants/Colors';
+import WaveBackground from "@/components/WaveBackground"; // 상수 파일에서 색상 가져오기
 
 const MainScreen: React.FC = () => {
   return (
@@ -10,6 +11,8 @@ const MainScreen: React.FC = () => {
           colors={Colors.backgroundGradient}
           style={styles.container}
       >
+        <WaveBackground />
+
         <StatusBar barStyle="light-content" />
         <SafeAreaView style={styles.safeArea}>
           {/* 상단 로고 */}
