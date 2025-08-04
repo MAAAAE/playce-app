@@ -29,7 +29,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
+            tabBarStyle: { display: 'none' }, // 하단 탭바 숨기기
+            headerShown: false, // 상단 헤더 숨기기
+            title: 'Tab One',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>

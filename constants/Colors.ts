@@ -17,3 +17,12 @@ export default {
     tabIconSelected: tintColorDark,
   },
 };
+
+export const Colors = {
+  backgroundGradient: ['#1A1A2E', '#16213E', '#0F3460'],
+  text: '#FFFFFF',
+  logo: '#FFFFFF',
+  searchBarBg: 'rgba(255, 255, 255, 0.1)',
+  searchBarPlaceholder: '#A9A9A9',
+  searchIcon: '#E94560',
+} as const; // 이 부분을 추가해 주세요.
