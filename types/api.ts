@@ -12,10 +12,10 @@ export interface PlaylistResponseDto {
 }
 
 export interface SongRecommendation {
-  engTitle: string; // 영문 제목
+  title: string; // 영문 제목
   artist: string; // 아티스트명
   reason: string; // 추천 이유 (1줄)
-  albumCoverUrl: string; // 앨범 커버 URL
+  cover: string; // 앨범 커버 URL
 }
 
 // API 에러 응답 타입

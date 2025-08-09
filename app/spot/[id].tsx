@@ -88,9 +88,9 @@ const SpotDetailScreen = () => {
         if (apiPlaylistData?.recommendations) {
             return apiPlaylistData.recommendations.map((song, index) => ({
                 id: `api-${index}`,
-                title: song.engTitle, // 변경된 API에서는 engTitle만 제공
+                title: song.title, // 변경된 API에서는 title만 제공
                 artist: song.artist,
-                albumArt: song.albumCoverUrl,
+                albumArt: song.cover,
             }));
         }
         return spotData.playlist;
