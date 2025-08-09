@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, TouchableWithoutFeedback, ScrollView, Platform, Keyboard, Dimensions } from 'react-native';
+import { View, StyleSheet, StatusBar, TouchableWithoutFeedback, Platform, Keyboard, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Tabs } from 'expo-router';
-import SearchBar from '../../components/SearchBar';
 import WaveBackground from '../../components/WaveBackground';
-import PlaceCard from '../../components/PlaceCard';
-import Animated, { Layout, useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
+import AppHeader from '../../components/AppHeader';
+import MainContent from '../../components/MainContent';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 import { MOCK_PLACES, Place } from '@/data/mockData';
-import SearchSuggestions from '@/components/SearchSuggestions';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchAnimation } from '@/hooks/useSearchAnimation';
 
@@ -35,10 +34,10 @@ const MainScreen: React.FC = () => {
     bottomInsetSV.value = insets.bottom || 0;
   }, [insets.top, insets.bottom, topInsetSV, bottomInsetSV]);
 
-    // Derive target shift so that content never crosses safe area top
+  // Derive target shift so that content never crosses safe area top
   useDerivedValue(() => {
-    const topPadding = topInsetSV.value + 32; // matches paddingTop usage
-    const headerSpace = 60; // estimated header height + desired gap
+    const topPadding = topInsetSV.value;
+    const headerSpace = 46; // header height from AppHeader component
     const safeContentTop = topPadding + headerSpace;
     const bottomPadding = bottomInsetSV.value;
     const availableHeight = windowHeight - safeContentTop - bottomPadding - keyboardHeight.value;
@@ -115,50 +114,20 @@ const MainScreen: React.FC = () => {
               <View style={styles.dimOverlay} />
               <WaveBackground />
             <StatusBar barStyle="light-content" />
-            <View style={[styles.safeAreaLike, { paddingTop: (insets.top || 0) + 32, paddingBottom: insets.bottom || 0 }]}> 
-                            <View style={styles.header}>
-                <Text style={styles.logoText}>Play:ce</Text>
-              </View>
+            <View style={[styles.safeAreaLike, { paddingTop: insets.top || 0, paddingBottom: insets.bottom || 0 }]}>
+              <AppHeader />
               <Animated.View style={[styles.animatedContentWrapper, animatedKeyboardStyle]} onLayout={(e) => { contentHeight.value = e.nativeEvent.layout.height; }}>
-                <View style={[styles.content, !focused && styles.contentCentered]}> 
-                                    <Animated.View
-                    style={[styles.topContainer, topContainerAnimatedStyle, !focused && styles.topInitialPosition]}
-                  >
-                    <Text style={styles.title}>Experience Korea,</Text>
-                    <Text style={[styles.title, styles.secondaryTitle]}>Explore K-POP</Text>
-                  </Animated.View>
-                  <Animated.View
-                    style={[styles.bottomContainer, bottomContainerAnimatedStyle, !focused && styles.bottomInitialPosition]}
-                  >
-                    <SearchBar
-                      onFocus={onFocus}
-                      onBlur={onBlur}
-                      onChangeText={setSearchText}
-                    />
-                    <SearchSuggestions
-                      suggestions={suggestions.slice(0, 5)}
-                      isLoading={isLoading}
-                    />
-                    {suggestions.length === 0 && (
-                      <View style={styles.popularPlacesContainer}>
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={styles.cardsContainer}
-                        >
-                          {popularPlaces.map((place, index) => (
-                            <PlaceCard
-                              key={index}
-                              name={place.name}
-                              imageUrl={place.imageUrl}
-                              onPress={() => console.log(`Navigate to ${place.name}`)}
-                            />
-                          ))}
-                        </ScrollView>
-                      </View>
-                    )}
-                  </Animated.View>
-                </View>
+                <MainContent
+                  focused={focused}
+                  topContainerAnimatedStyle={topContainerAnimatedStyle}
+                  bottomContainerAnimatedStyle={bottomContainerAnimatedStyle}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  onChangeText={setSearchText}
+                  suggestions={suggestions}
+                  isLoading={isLoading}
+                  popularPlaces={popularPlaces}
+                />
               </Animated.View>
             </View>
           </LinearGradient>
@@ -175,62 +144,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.5)', // dim 강도 조절 값 조정 (기존 0.35)
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   safeAreaLike: {
     flex: 1,
     width: '100%',
   },
-  fixedContentWrapper: {
-    flex: 1,
-  },
   animatedContentWrapper: {
     flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    // top padding handled by safeAreaLike
-  },
-  logoText: {
-    color: Colors.logo,
-    fontSize: 16,
-    fontWeight: '500',
-    fontFamily: 'Outfit-Medium',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  contentCentered: {
-    justifyContent: 'center',
-  },
-  topContainer: {
-    justifyContent: 'flex-end',
-    paddingBottom: 24,
-  },
-  bottomContainer: {
-    justifyContent: 'flex-start',
-  },
-  topInitialPosition: { marginBottom: 12 },
-  bottomInitialPosition: {},
-  title: {
-    color: Colors.text,
-    fontSize: 36,
-    fontWeight: 'bold',
-    letterSpacing: -0.72,
-    lineHeight: 45,
-    fontFamily: 'Outfit-Bold',
-  },
-  secondaryTitle: {
-    color: Colors.secondaryText,
-  },
-  popularPlacesContainer: {
-    marginTop: 20,
-  },
-  cardsContainer: {
-    paddingHorizontal: 0,
-    gap: 8,
+    marginTop: -150,
   },
 });
 
