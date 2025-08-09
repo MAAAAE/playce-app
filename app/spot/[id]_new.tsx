@@ -147,18 +147,14 @@ const SpotDetailScreen = () => {
                                 <View style={{ width: 44 }} />
                             </Animated.View>
 
-                            {/* Hero Back Button - Independent positioning */}
-                            <Animated.View style={[styles.heroBackButtonContainer, { paddingTop: insets.top }, heroTitleOpacity]}>
+                            {/* Hero Title */}
+                            <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
                                 <TouchableOpacity 
                                     style={styles.heroBackButton}
                                     onPress={() => router.back()}
                                 >
                                     <Ionicons name="chevron-back" size={24} color={Colors.text} />
                                 </TouchableOpacity>
-                            </Animated.View>
-
-                            {/* Hero Title */}
-                            <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
                                 <Text style={styles.heroTitle}>{spotData.name}</Text>
                             </Animated.View>
                         </LinearGradient>
@@ -226,16 +222,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         flex: 1,
     },
-    heroBackButtonContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 20,
-        paddingBottom: 10,
-        minHeight: 50,
-        justifyContent: 'flex-end',
-    },
     heroTitleContainer: {
         position: 'absolute',
         bottom: 0,
@@ -245,12 +231,16 @@ const styles = StyleSheet.create({
         paddingBottom: 57,
     },
     heroBackButton: {
+        position: 'absolute',
+        top: -200, // Position it higher in the hero section
+        left: 20,
         width: 44,
         height: 44,
         borderRadius: 22,
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 10,
     },
     backButton: {
         width: 44,

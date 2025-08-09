@@ -57,9 +57,11 @@ const MainScreen: React.FC = () => {
 
   // 인기 장소 데이터
   const popularPlaces = [
-    { name: 'Gyeongbokgung', imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400' },
-    { name: 'Bukchon', imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400' },
-    { name: 'Gangnam', imageUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400' },
+    { name: 'Gyeongbokgung', imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=250&fit=crop&q=80' },
+    { name: 'Bukchon', imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=250&fit=crop&q=80' },
+    { name: 'Gangnam', imageUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&h=250&fit=crop&q=80' },
+    { name: 'Hongdae', imageUrl: 'https://images.unsplash.com/photo-1574594723019-f47c3cbb7d6e?w=400&h=250&fit=crop&q=80' },
+    { name: 'Myeongdong', imageUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=250&fit=crop&q=80' },
   ];
 
   const onFocus = () => { handleFocus(); setFocused(true); };

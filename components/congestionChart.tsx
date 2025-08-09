@@ -11,8 +11,8 @@ interface SVGPoint {
 }
 
 // 차트의 크기를 정의
-const CHART_WIDTH = Dimensions.get('window').width - 80; // 좌우 여백 40
-const CHART_HEIGHT = 120;
+const CHART_WIDTH = 303; // 피그마 디자인에 맞춤
+const CHART_HEIGHT = 80;
 
 // 차트 데이터를 SVG 경로 데이터로 변환하는 헬퍼 함수
 const lineToPath = (points: SVGPoint[]) => {
@@ -40,81 +40,127 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex })
     }, [data]);
 
     const linePath = useMemo(() => lineToPath(points), [points]);
-    const properties = useMemo(() => new path.svgPathProperties(linePath), [linePath]);
-    const { x, y } = properties.getPointAtLength(properties.getTotalLength() * (currentIndex / (data.length - 1)));
 
     const currentLevel = data[currentIndex]?.level;
-    const levelText = currentLevel < 40 ? 'LOW' : currentLevel < 75 ? 'MODERATE' : 'HIGH';
+    const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Moderate' : 'High';
+    const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFA500' : '#FF4444';
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>When to Play;ce</Text>
-            <Text style={styles.subtitle}>Avoid the rush. Catch the best moment.</Text>
+            <View style={styles.headerContainer}>
+                <Text style={styles.title}>When to Play:ce</Text>
+                <Text style={styles.subtitle}>Avoid the rush. Catch the best moment.</Text>
+            </View>
 
             <View style={styles.chartContainer}>
-                <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-                    <Path d={linePath} stroke={Colors.searchBarPlaceholder} strokeWidth={2} fill="none" />
-                </Svg>
+                <View style={styles.chartBackground}>
+                    {/* Crowd Level Indicator */}
+                    <View style={[styles.levelIndicator, { borderColor: levelColor }]}>
+                        <Text style={styles.levelLabel}>crowd level</Text>
+                        <Text style={[styles.levelValue, { color: '#E8E8E8' }]}>{levelText}</Text>
+                        <Text style={styles.levelDate}>July 1</Text>
+                    </View>
+
+                    {/* Chart */}
+                    <View style={styles.svgContainer}>
+                        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                            <Path 
+                                d={linePath} 
+                                stroke="#FFFFFF" 
+                                strokeWidth={2} 
+                                fill="none" 
+                                opacity={0.8}
+                            />
+                        </Svg>
+                    </View>
+
+                    <Text style={styles.footerText}>30-day crowd level forecast</Text>
+                </View>
             </View>
-            <Text style={styles.footerText}>30-day crowd level forecast</Text>
         </View>
     );
 };
 
-
 const styles = StyleSheet.create({
     container: {
-        marginTop: 40,
-        backgroundColor: Colors.searchBarBg,
-        borderRadius: 20,
-        padding: 20,
+        gap: 10,
+    },
+    headerContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        gap: 4,
     },
     title: {
-        color: Colors.text,
-        fontSize: 24,
-        fontWeight: 'bold',
+        color: '#FFFFFF',
+        fontSize: 20,
+        fontFamily: 'Pretendard-Bold',
+        letterSpacing: -0.4,
+        lineHeight: 30,
     },
     subtitle: {
-        color: Colors.searchBarPlaceholder,
-        fontSize: 14,
-        marginTop: 4,
-        marginBottom: 20,
+        color: '#B7B7B7',
+        fontSize: 16,
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.32,
+        lineHeight: 16,
     },
     chartContainer: {
-        position: 'relative',
-        height: CHART_HEIGHT,
-        width: CHART_WIDTH,
-        alignSelf: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
     },
-    indicator: {
-        position: 'absolute',
-        alignItems: 'center',
-        width: 60,
-    },
-    indicatorBox: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+    chartBackground: {
+        width: 335,
+        height: 220,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#4CAF50', // LOW 색상
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderColor: '#464646',
+        paddingHorizontal: 16,
+        paddingVertical: 20,
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 16,
     },
-    indicatorText: {
-        color: '#4CAF50',
-        fontWeight: 'bold',
-        fontSize: 12,
+    levelIndicator: {
+        backgroundColor: 'rgba(0, 0, 0, 0.16)',
+        borderRadius: 15,
+        borderWidth: 0.938,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        gap: 9.375,
+        alignItems: 'center',
+        width: 93.75,
     },
-    indicatorStem: {
-        width: 1,
-        height: 20,
-        backgroundColor: '#4CAF50',
-        marginTop: 5,
+    levelLabel: {
+        color: '#959595',
+        fontSize: 9.375,
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.1875,
+        lineHeight: 9.375,
+    },
+    levelValue: {
+        fontSize: 15,
+        fontFamily: 'Pretendard-SemiBold',
+        letterSpacing: -0.3,
+        lineHeight: 15,
+    },
+    levelDate: {
+        color: '#959595',
+        fontSize: 9.375,
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.1875,
+        lineHeight: 9.375,
+    },
+    svgContainer: {
+        width: CHART_WIDTH,
+        height: CHART_HEIGHT,
     },
     footerText: {
-        color: Colors.searchBarPlaceholder,
-        fontSize: 10,
+        color: '#959595',
+        fontSize: 12,
+        fontFamily: 'Pretendard-Bold',
+        lineHeight: 12,
         textAlign: 'center',
-        marginTop: 10,
     },
 });
 

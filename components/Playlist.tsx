@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 // 데이터 타입을 명확히 정의합니다.
@@ -7,6 +7,7 @@ export interface Song {
     id: string;
     title: string;
     artist: string;
+    albumArt?: string;
 }
 
 interface PlaylistProps {
@@ -16,68 +17,95 @@ interface PlaylistProps {
 const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Play;list</Text>
-            <Text style={styles.subtitle}>Feel the place through the music.</Text>
-            <FlatList
-                data={songs}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.songItem}>
-                        <View style={styles.albumArt} />
-                        <View style={styles.textContainer}>
-                            <Text style={styles.songTitle} numberOfLines={1}>{item.title}</Text>
-                            <Text style={styles.songArtist} numberOfLines={1}>{item.artist}</Text>
+            <View style={styles.headerContainer}>
+                <Text style={styles.title}>Play:list</Text>
+                <Text style={styles.subtitle}>Feel the place through the music.</Text>
+            </View>
+            
+            <View style={styles.playlistContainer}>
+                <FlatList
+                    data={songs}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.songItem}>
+                            {item.albumArt ? (
+                                <Image 
+                                    source={{ uri: item.albumArt }} 
+                                    style={styles.albumArt}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={styles.albumArt} />
+                            )}
+                            <View style={styles.textContainer}>
+                                <Text style={styles.songTitle} numberOfLines={1}>{item.title}</Text>
+                                <Text style={styles.songArtist} numberOfLines={1}>{item.artist}</Text>
+                            </View>
                         </View>
-                    </View>
-                )}
-                scrollEnabled={false}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
+                    )}
+                    scrollEnabled={false}
+                />
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 30, // 이전 섹션과의 간격
+        gap: 10,
+    },
+    headerContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        gap: 5,
     },
     title: {
-        color: Colors.text,
-        fontSize: 24,
-        fontWeight: 'bold',
+        color: '#FFFFFF',
+        fontSize: 20,
+        fontFamily: 'Pretendard-Bold',
+        letterSpacing: -0.4,
+        lineHeight: 30,
     },
     subtitle: {
-        color: Colors.searchBarPlaceholder, // 부제목에 연한 색상 사용
-        fontSize: 14,
-        marginTop: 4,
-        marginBottom: 20, // 리스트와의 간격
+        color: '#B7B7B7',
+        fontSize: 16,
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.32,
+        lineHeight: 16,
+    },
+    playlistContainer: {
+        paddingVertical: 10,
     },
     songItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 20,
+        height: 80,
+        gap: 20,
     },
     albumArt: {
-        width: 50,
-        height: 50,
-        backgroundColor: Colors.searchBarBg, // 검색창과 유사한 배경색
-        borderRadius: 8, // 부드러운 둥근 모서리
+        width: 60,
+        height: 60,
+        backgroundColor: '#B7B7B7',
+        borderRadius: 12,
     },
     textContainer: {
-        flex: 1, // 텍스트가 길어지면 줄바꿈되도록
-        marginLeft: 15, // 앨범 아트와의 간격
+        flex: 1,
+        gap: 4,
     },
     songTitle: {
-        color: Colors.text,
-        fontSize: 16,
-        fontWeight: '600', // semi-bold
+        color: '#E8E8E8',
+        fontSize: 18,
+        fontFamily: 'Pretendard-SemiBold',
+        letterSpacing: -0.36,
+        lineHeight: 18,
     },
     songArtist: {
-        color: Colors.searchBarPlaceholder,
+        color: '#E8E8E8',
         fontSize: 14,
-        marginTop: 4,
-    },
-    separator: {
-        height: 20, // 각 노래 항목 사이의 세로 간격
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.28,
+        lineHeight: 21,
     },
 });
 
