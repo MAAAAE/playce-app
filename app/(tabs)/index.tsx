@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, TouchableWithoutFeedback, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableWithoutFeedback, ScrollView, Platform, Keyboard, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
@@ -7,7 +7,7 @@ import { Tabs } from 'expo-router';
 import SearchBar from '../../components/SearchBar';
 import WaveBackground from '../../components/WaveBackground';
 import PlaceCard from '../../components/PlaceCard';
-import Animated, { Layout } from 'react-native-reanimated';
+import Animated, { Layout, useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 import { MOCK_PLACES, Place } from '@/data/mockData';
 import SearchSuggestions from '@/components/SearchSuggestions';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -21,6 +21,40 @@ const MainScreen: React.FC = () => {
   const debouncedSearchText = useDebounce(searchText, 500);
   const [suggestions, setSuggestions] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // Keyboard animation shared value
+  const keyboardHeight = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
+  const animatedShift = useSharedValue(0); // final shift applied
+  const topInsetSV = useSharedValue(insets.top || 0);
+  const bottomInsetSV = useSharedValue(insets.bottom || 0);
+  const windowHeight = Dimensions.get('window').height;
+
+  // Update inset shared values if they change
+  useEffect(() => {
+    topInsetSV.value = insets.top || 0;
+    bottomInsetSV.value = insets.bottom || 0;
+  }, [insets.top, insets.bottom, topInsetSV, bottomInsetSV]);
+
+    // Derive target shift so that content never crosses safe area top
+  useDerivedValue(() => {
+    const topPadding = topInsetSV.value + 32; // matches paddingTop usage
+    const headerSpace = 60; // estimated header height + desired gap
+    const safeContentTop = topPadding + headerSpace;
+    const bottomPadding = bottomInsetSV.value;
+    const availableHeight = windowHeight - safeContentTop - bottomPadding - keyboardHeight.value;
+    
+    let targetShift = 0;
+    if (keyboardHeight.value > 0 && contentHeight.value > availableHeight) {
+      const needed = contentHeight.value - availableHeight;
+      // Conservative shift - never more than 40% of keyboard height to avoid header overlap
+      targetShift = Math.min(needed, keyboardHeight.value * 0.4);
+    }
+    animatedShift.value = withTiming(targetShift, { duration: 300, easing: Easing.out(Easing.cubic) });
+  });
+
+  const animatedKeyboardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -animatedShift.value }],
+  }));
 
   // 인기 장소 데이터
   const popularPlaces = [
@@ -48,6 +82,24 @@ const MainScreen: React.FC = () => {
     }
   }, [debouncedSearchText]); // 의존성 배열을 debouncedSearchText로 변경
 
+  // Keyboard show/hide listeners with smooth animation
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const h = e?.endCoordinates?.height || 0;
+      keyboardHeight.value = h; // raw height; smoothing handled in derived shift
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardHeight.value = 0;
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardHeight]);
+
 
 
   return (
@@ -64,16 +116,12 @@ const MainScreen: React.FC = () => {
               <WaveBackground />
             <StatusBar barStyle="light-content" />
             <View style={[styles.safeAreaLike, { paddingTop: (insets.top || 0) + 32, paddingBottom: insets.bottom || 0 }]}> 
-              <KeyboardAvoidingView
-                  style={styles.fixedContentWrapper}
-                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                  keyboardVerticalOffset={0}
-              >
-                <View style={styles.header}>
-                  <Text style={styles.logoText}>Play:ce</Text>
-                </View>
+                            <View style={styles.header}>
+                <Text style={styles.logoText}>Play:ce</Text>
+              </View>
+              <Animated.View style={[styles.animatedContentWrapper, animatedKeyboardStyle]} onLayout={(e) => { contentHeight.value = e.nativeEvent.layout.height; }}>
                 <View style={[styles.content, !focused && styles.contentCentered]}> 
-                  <Animated.View
+                                    <Animated.View
                     style={[styles.topContainer, topContainerAnimatedStyle, !focused && styles.topInitialPosition]}
                   >
                     <Text style={styles.title}>Experience Korea,</Text>
@@ -111,7 +159,7 @@ const MainScreen: React.FC = () => {
                     )}
                   </Animated.View>
                 </View>
-              </KeyboardAvoidingView>
+              </Animated.View>
             </View>
           </LinearGradient>
         </TouchableWithoutFeedback>
@@ -134,6 +182,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   fixedContentWrapper: {
+    flex: 1,
+  },
+  animatedContentWrapper: {
     flex: 1,
   },
   header: {
