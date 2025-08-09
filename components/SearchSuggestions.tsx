@@ -4,7 +4,8 @@ import { Colors } from '@/constants/Colors';
 import { Place } from '@/data/mockData';
 import Animated, {FadeIn, FadeInDown, FadeOut} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import {Link} from "expo-router";
+import {router} from "expo-router";
+import { usePlaylistSearch } from '@/hooks/useApi';
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -14,6 +15,33 @@ interface SearchSuggestionsProps {
 }
 
 const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLoading }) => {
+    const { searchPlaylist, loading: apiLoading } = usePlaylistSearch();
+
+    const handlePlaceSelect = async (place: Place) => {
+        try {
+            const playlistData = await searchPlaylist({
+                destination: place.name,
+                season: "사계절", // 기본값
+                playlistSize: 8, // 5-10 범위 내에서
+            });
+
+            // 결과를 spot/[id] 페이지로 전달하며 이동
+            router.push({
+                pathname: "/spot/[id]",
+                params: { 
+                    id: place.id,
+                    playlistData: JSON.stringify(playlistData),
+                },
+            });
+        } catch (error) {
+            console.error('플레이리스트 호출 실패:', error);
+            // 에러가 발생해도 상세 페이지로 이동 (플레이리스트 없이)
+            router.push({
+                pathname: "/spot/[id]",
+                params: { id: place.id },
+            });
+        }
+    };
     // 로딩 중이거나, 로딩이 끝났지만 보여줄 제안이 없는 경우
     // 둘 다 렌더링하지 않으면 부모 컴포넌트에서 애니메이션 상태와 충돌할 수 있음
     // 따라서 로딩 상태와 제안 목록 상태를 컴포넌트 내부에서 함께 처리
@@ -42,27 +70,23 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLo
                     data={suggestions}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => (
-                        <Link
-                            href={{
-                                pathname: "/spot/[id]",
-                                params: { id: item.id },
-                            }}
-                            asChild
+                        <AnimatedTouchableOpacity
+                            style={styles.suggestionItem}
+                            entering={FadeInDown.duration(200).delay(index * 50)}
+                            onPress={() => handlePlaceSelect(item)}
+                            disabled={apiLoading}
                         >
-                            <AnimatedTouchableOpacity
-                                style={styles.suggestionItem}
-                                entering={FadeInDown.duration(200).delay(index * 50)}
-                            >
-
-                                    <View style={styles.iconContainer}>
-                                        <Ionicons name="location-sharp" size={24} color={Colors.text} />
-                                    </View>
-                                    <View style={styles.textContainer}>
-                                        <Text style={styles.nameText}>{item.name}</Text>
-                                        <Text style={styles.addressText}>{item.address}</Text>
-                                    </View>
-                            </AnimatedTouchableOpacity>
-                        </Link>
+                            <View style={styles.iconContainer}>
+                                <Ionicons name="location-sharp" size={24} color={Colors.text} />
+                            </View>
+                            <View style={styles.textContainer}>
+                                <Text style={styles.nameText}>{item.name}</Text>
+                                <Text style={styles.addressText}>{item.address}</Text>
+                            </View>
+                            {apiLoading && (
+                                <ActivityIndicator size="small" color={Colors.text} />
+                            )}
+                        </AnimatedTouchableOpacity>
                     )}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={false}

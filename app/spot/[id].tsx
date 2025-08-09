@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, StatusBar, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { Colors } from '@/constants/Colors';
 import Playlist from '../../components/Playlist';
 import CongestionChart from "@/components/congestionChart";
 import {MOCK_CHART_DATA} from "@/data/mockData";
+import { PlaylistResponseDto } from '@/types/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_EXPANDED_HEIGHT = 356;
@@ -61,10 +62,39 @@ const MOCK_DATA: { [key: string]: { name: string; imageUrl: string; playlist: { 
 };
 
 const SpotDetailScreen = () => {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id, playlistData } = useLocalSearchParams<{ 
+        id: string; 
+        playlistData?: string; 
+    }>();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const spotData = MOCK_DATA[id] || MOCK_DATA['1']; // id가 없으면 기본값 사용
+    
+    // API에서 받은 플레이리스트 데이터 파싱
+    const apiPlaylistData = useMemo(() => {
+        if (playlistData) {
+            try {
+                return JSON.parse(playlistData) as PlaylistResponseDto;
+            } catch (error) {
+                console.error('플레이리스트 데이터 파싱 실패:', error);
+                return null;
+            }
+        }
+        return null;
+    }, [playlistData]);
+    
+    // API 데이터를 Playlist 컴포넌트 형식으로 변환
+    const playlistSongs = useMemo(() => {
+        if (apiPlaylistData?.recommendations) {
+            return apiPlaylistData.recommendations.map((song, index) => ({
+                id: `api-${index}`,
+                title: song.engTitle, // 변경된 API에서는 engTitle만 제공
+                artist: song.artist,
+                albumArt: song.albumCoverUrl,
+            }));
+        }
+        return spotData.playlist;
+    }, [apiPlaylistData, spotData.playlist]);
     const todayIndex = new Date().getDate() - 1; // 오늘 날짜(1~30)를 인덱스(0~29)로
 
     // Animated scroll value
@@ -194,7 +224,7 @@ const SpotDetailScreen = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.contentContainer}>
-                        <Playlist songs={spotData.playlist} />
+                        <Playlist songs={playlistSongs} />
                         <CongestionChart data={MOCK_CHART_DATA} currentIndex={todayIndex} />
                         
                         {/* Bottom gradient overlay */}
