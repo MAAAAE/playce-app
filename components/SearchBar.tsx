@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
         flex: 1,
         color: Colors.secondaryText,
         fontSize: 16,
-        fontFamily: 'Pretendard-Regular',
+        fontFamily: 'Outfit-Regular',
         letterSpacing: -0.32,
         marginLeft: 12,
     },

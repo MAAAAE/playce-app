@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     color: Colors.secondaryText,
     fontSize: 15,
     fontWeight: '700',
-    fontFamily: 'Pretendard-Bold',
+    fontFamily: 'Outfit-Bold',
     position: 'absolute',
     top: 10,
     left: 10,

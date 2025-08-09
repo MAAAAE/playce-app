@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: -0.72,
     lineHeight: 45,
-    fontFamily: 'Outfit-Bold',
+    fontFamily: 'Outfit-Medium',
   },
   secondaryTitle: {
     color: Colors.secondaryText,
