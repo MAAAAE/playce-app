@@ -176,16 +176,18 @@ const styles = StyleSheet.create({
     chartContainer: {
         paddingHorizontal: 20,
         paddingVertical: 10,
+        paddingBottom: 20, // 하단 여백 추가
     },
     chartBackground: {
         width: 335,
-        height: 220,
+        height: 240, // 높이를 220에서 240으로 증가
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderRadius: 16,
         borderWidth: 1,
         borderColor: '#464646',
         paddingHorizontal: 16,
         paddingVertical: 20,
+        paddingBottom: 24, // 하단 패딩 추가
         alignItems: 'center',
         justifyContent: 'flex-end',
         gap: 16,
@@ -228,8 +230,10 @@ const styles = StyleSheet.create({
         color: '#959595',
         fontSize: 12,
         fontFamily: 'Pretendard-Bold',
-        lineHeight: 12,
+        lineHeight: 15, // 줄 간격 증가
         textAlign: 'center',
+        marginTop: 4, // 상단 여백 추가
+        opacity: 0.9, // 약간의 투명도로 더 부드럽게
     },
 });
 
