@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TextInput, Text, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import { Colors } from '../constants/Colors';
+import AIIcon from './AIIcon';
 
 interface SearchBarProps {
     onFocus: () => void;
@@ -11,7 +12,7 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ onFocus, onBlur, onChangeText }) => {
     return (
         <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>✨</Text>
+            <AIIcon size={20} color={Colors.searchIcon} />
             <TextInput
                 style={styles.input}
                 placeholder="Where to?"
@@ -30,18 +31,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: Colors.searchBarBg,
-        borderRadius: 15,
-        paddingHorizontal: 15,
+        borderRadius: 300,
+        paddingHorizontal: 24,
         paddingVertical: 12,
-    },
-    searchIcon: {
-        marginRight: 10,
-        fontSize: 20,
+        height: 45,
     },
     input: {
         flex: 1,
-        color: Colors.text,
+        color: Colors.secondaryText,
         fontSize: 16,
+        fontFamily: 'Pretendard-Regular',
+        letterSpacing: -0.32,
+        marginLeft: 12,
     },
 });
 
