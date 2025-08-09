@@ -118,51 +118,71 @@ const SpotDetailScreen = () => {
         };
     });
 
+    // Header background opacity (image visibility)
+    const headerBackgroundOpacity = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollY.value,
+            [0, HEADER_EXPANDED_HEIGHT - HEADER_COLLAPSED_HEIGHT],
+            [1, 0],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            opacity,
+        };
+    });
+
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" />
             <View style={styles.container}>
                 {/* Animated Header */}
-                <Animated.View style={[styles.header, headerHeight]}>
-                    <ImageBackground 
-                        source={{ uri: spotData.imageUrl }} 
-                        style={styles.headerBackground}
-                        resizeMode="cover"
-                    >
-                        <LinearGradient
-                            colors={['rgba(8,8,8,0)', 'rgba(17,17,17,0.93)']}
-                            locations={[0.19, 0.93]}
-                            style={styles.headerGradient}
+                <Animated.View style={[styles.header, headerHeight, { backgroundColor: '#111111' }]}>
+                    {/* Image Background - Only visible when expanded */}
+                    <Animated.View style={[styles.imageContainer, headerBackgroundOpacity]}>
+                        <ImageBackground 
+                            source={{ uri: spotData.imageUrl }} 
+                            style={styles.headerBackground}
+                            resizeMode="cover"
                         >
-                            {/* Collapsed Header Title */}
-                            <Animated.View style={[styles.collapsedHeader, { paddingTop: insets.top }, headerTitleOpacity]}>
-                                <TouchableOpacity 
-                                    style={styles.backButton}
-                                    onPress={() => router.back()}
-                                >
-                                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                                </TouchableOpacity>
-                                <Text style={styles.collapsedTitle}>{spotData.name}</Text>
-                                <View style={{ width: 44 }} />
-                            </Animated.View>
+                            <LinearGradient
+                                colors={['rgba(8,8,8,0)', 'rgba(17,17,17,0.93)']}
+                                locations={[0.19, 0.93]}
+                                style={styles.headerGradient}
+                            />
+                        </ImageBackground>
+                    </Animated.View>
 
-                            {/* Hero Back Button - Independent positioning */}
-                            <Animated.View style={[styles.heroBackButtonContainer, { paddingTop: insets.top }, heroTitleOpacity]}>
-                                <TouchableOpacity 
-                                    style={styles.heroBackButton}
-                                    onPress={() => router.back()}
-                                >
-                                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                                </TouchableOpacity>
-                            </Animated.View>
+                    {/* Header Content */}
+                    <View style={styles.headerContent}>
+                        {/* Collapsed Header Title */}
+                        <Animated.View style={[styles.collapsedHeader, { paddingTop: insets.top }, headerTitleOpacity]}>
+                            <TouchableOpacity 
+                                style={styles.backButton}
+                                onPress={() => router.back()}
+                            >
+                                <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                            </TouchableOpacity>
+                            <Text style={styles.collapsedTitle}>{spotData.name}</Text>
+                            <View style={{ width: 44 }} />
+                        </Animated.View>
 
-                            {/* Hero Title */}
-                            <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
-                                <Text style={styles.heroTitle}>{spotData.name}</Text>
-                            </Animated.View>
-                        </LinearGradient>
-                    </ImageBackground>
+                        {/* Hero Back Button - Independent positioning */}
+                        <Animated.View style={[styles.heroBackButtonContainer, { paddingTop: insets.top }, heroTitleOpacity]}>
+                            <TouchableOpacity 
+                                style={styles.heroBackButton}
+                                onPress={() => router.back()}
+                            >
+                                <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                            </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* Hero Title */}
+                        <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
+                            <Text style={styles.heroTitle}>{spotData.name}</Text>
+                        </Animated.View>
+                    </View>
                 </Animated.View>
 
                 {/* Scrollable Content */}
@@ -206,6 +226,17 @@ const styles = StyleSheet.create({
     headerBackground: {
         flex: 1,
         width: '100%',
+    },
+    imageContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    headerContent: {
+        flex: 1,
+        position: 'relative',
     },
     headerGradient: {
         flex: 1,
