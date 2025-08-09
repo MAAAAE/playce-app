@@ -1,9 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { ChartDataPoint } from '@/data/mockData';
 import Svg, { Path } from 'react-native-svg';
-import * as path from 'svg-path-properties';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+  useAnimatedGestureHandler,
+  useSharedValue,
+  runOnJS,
+} from 'react-native-reanimated';
 
 interface SVGPoint {
     x: number;
@@ -57,10 +63,17 @@ const createSmoothPath = (points: SVGPoint[]): string => {
 
 interface CongestionChartProps {
     data: ChartDataPoint[];
-    currentIndex: number; // 오늘 날짜에 해당하는 데이터 인덱스
+    currentIndex?: number; // 오늘 날짜에 해당하는 데이터 인덱스 (선택사항)
 }
 
-const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex }) => {
+interface Context extends Record<string, unknown> {
+  startX: number;
+}
+
+const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 0 }) => {
+    const [selectedIndex, setSelectedIndex] = useState(currentIndex);
+    const translateX = useSharedValue(0);
+    const lastHapticIndex = useSharedValue(currentIndex);
     // data를 SVG 좌표로 변환
     const points = useMemo(() => {
         return data.map((point, index) => {
@@ -72,7 +85,30 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex })
 
     const linePath = useMemo(() => createSmoothPath(points), [points]);
 
-    const currentLevel = data[currentIndex]?.level;
+    // 제스처 핸들러
+    const gestureHandler = useAnimatedGestureHandler<any, Context>({
+        onStart: (_, context) => {
+            context.startX = translateX.value;
+        },
+        onActive: (event, context) => {
+            translateX.value = context.startX + event.translationX;
+            
+            // X 좌표를 배열 인덱스로 변환
+            const relativeX = Math.max(0, Math.min(CHART_WIDTH, event.absoluteX - 56)); // 컨테이너 여백 고려 (20 + 16 + 20)
+            const index = Math.round((relativeX / CHART_WIDTH) * (data.length - 1));
+            
+            if (index >= 0 && index < data.length && index !== lastHapticIndex.value) {
+                runOnJS(setSelectedIndex)(index);
+                lastHapticIndex.value = index;
+                runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+            }
+        },
+        onEnd: () => {
+            translateX.value = 0;
+        },
+    });
+
+    const currentLevel = data[selectedIndex]?.level || data[currentIndex]?.level || 0;
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
 
@@ -89,21 +125,23 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex })
                     <View style={[styles.levelIndicator, { borderColor: levelColor }]}>
                         <Text style={styles.levelLabel}>crowd level</Text>
                         <Text style={[styles.levelValue, { color: '#E8E8E8' }]}>{levelText}</Text>
-                        <Text style={styles.levelDate}>July 1</Text>
+                        <Text style={styles.levelDate}>July {selectedIndex + 1}</Text>
                     </View>
 
                     {/* Chart */}
-                    <View style={styles.svgContainer}>
-                        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-                            <Path 
-                                d={linePath} 
-                                stroke="#FFFFFF" 
-                                strokeWidth={2} 
-                                fill="none" 
-                                opacity={0.8}
-                            />
-                        </Svg>
-                    </View>
+                    <PanGestureHandler onGestureEvent={gestureHandler}>
+                        <Animated.View style={styles.svgContainer}>
+                            <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                                <Path 
+                                    d={linePath} 
+                                    stroke="#FFFFFF" 
+                                    strokeWidth={2} 
+                                    fill="none" 
+                                    opacity={0.8}
+                                />
+                            </Svg>
+                        </Animated.View>
+                    </PanGestureHandler>
 
                     <Text style={styles.footerText}>30-day crowd level forecast</Text>
                 </View>
