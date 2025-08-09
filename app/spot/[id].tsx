@@ -247,16 +247,12 @@ const styles = StyleSheet.create({
     heroBackButton: {
         width: 44,
         height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButton: {
         width: 44,
         height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         justifyContent: 'center',
         alignItems: 'center',
     },

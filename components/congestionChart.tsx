@@ -14,13 +14,44 @@ interface SVGPoint {
 const CHART_WIDTH = 303; // 피그마 디자인에 맞춤
 const CHART_HEIGHT = 80;
 
-// 차트 데이터를 SVG 경로 데이터로 변환하는 헬퍼 함수
-const lineToPath = (points: SVGPoint[]) => {
-    if (points.length === 0) return '';
+// 차트 데이터를 부드러운 곡선 SVG 경로 데이터로 변환하는 헬퍼 함수
+const createSmoothPath = (points: SVGPoint[]): string => {
+    if (points.length < 2) return '';
+    
     let d = `M ${points[0].x} ${points[0].y}`;
-    points.forEach(p => {
-        d += ` L ${p.x} ${p.y}`;
-    });
+    
+    for (let i = 1; i < points.length; i++) {
+        const currentPoint = points[i];
+        const previousPoint = points[i - 1];
+        
+        if (i === 1) {
+            // 첫 번째 곡선: 시작점에서 두 번째 점으로
+            const controlPoint1 = {
+                x: previousPoint.x + (currentPoint.x - previousPoint.x) * 0.5,
+                y: previousPoint.y
+            };
+            const controlPoint2 = {
+                x: currentPoint.x - (currentPoint.x - previousPoint.x) * 0.5,
+                y: currentPoint.y
+            };
+            d += ` C ${controlPoint1.x} ${controlPoint1.y}, ${controlPoint2.x} ${controlPoint2.y}, ${currentPoint.x} ${currentPoint.y}`;
+        } else {
+            // 중간 곡선들: 이전 점의 방향을 고려한 부드러운 연결
+            const previousControlPoint = points[i - 2];
+            const nextPoint = points[Math.min(i + 1, points.length - 1)];
+            
+            const controlPoint1 = {
+                x: previousPoint.x + (currentPoint.x - previousControlPoint.x) * 0.2,
+                y: previousPoint.y + (currentPoint.y - previousControlPoint.y) * 0.2
+            };
+            const controlPoint2 = {
+                x: currentPoint.x - (nextPoint.x - previousPoint.x) * 0.2,
+                y: currentPoint.y - (nextPoint.y - previousPoint.y) * 0.2
+            };
+            d += ` C ${controlPoint1.x} ${controlPoint1.y}, ${controlPoint2.x} ${controlPoint2.y}, ${currentPoint.x} ${currentPoint.y}`;
+        }
+    }
+    
     return d;
 };
 
@@ -39,11 +70,11 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex })
         });
     }, [data]);
 
-    const linePath = useMemo(() => lineToPath(points), [points]);
+    const linePath = useMemo(() => createSmoothPath(points), [points]);
 
     const currentLevel = data[currentIndex]?.level;
-    const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Moderate' : 'High';
-    const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFA500' : '#FF4444';
+    const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
+    const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
 
     return (
         <View style={styles.container}>
