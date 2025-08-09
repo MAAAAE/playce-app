@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { ChartDataPoint } from '@/data/mockData';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useAnimatedGestureHandler,
@@ -112,6 +112,9 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
 
+    // 선택된 점의 좌표
+    const selectedPoint = points[selectedIndex] || points[currentIndex];
+
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -132,6 +135,7 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                     <PanGestureHandler onGestureEvent={gestureHandler}>
                         <Animated.View style={styles.svgContainer}>
                             <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                                {/* 차트 선 */}
                                 <Path 
                                     d={linePath} 
                                     stroke="#FFFFFF" 
@@ -139,6 +143,18 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                                     fill="none" 
                                     opacity={0.8}
                                 />
+                                {/* 선택된 점 */}
+                                {selectedPoint && (
+                                    <Circle
+                                        cx={selectedPoint.x}
+                                        cy={selectedPoint.y}
+                                        r={6}
+                                        fill="#FFFFFF"
+                                        stroke="#FFFFFF"
+                                        strokeWidth={2}
+                                        opacity={0.9}
+                                    />
+                                )}
                             </Svg>
                         </Animated.View>
                     </PanGestureHandler>
