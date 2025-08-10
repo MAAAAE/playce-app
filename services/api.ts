@@ -1,11 +1,31 @@
 // Playce API 서비스
 
-import { httpClient, HttpResponse } from './httpClient';
+import {httpClient, httpGet, HttpResponse} from './httpClient';
 import { ENDPOINTS } from './config';
 import {
   PlaylistRequestDto,
   PlaylistResponseDto,
 } from '../types/api';
+import { Place } from '@/data/mockData';
+
+// 검색 API 서비스
+export class SearchService {
+  static async searchAttractions(keyword: string): Promise<Place[]> {
+    if (!keyword.trim()) {
+      return [];
+    }
+
+    try {
+      const endpoint = `${ENDPOINTS.ATTRACTIONS_SEARCH}?keyword=${keyword}`;
+      const response: HttpResponse<Place[]> = await httpGet(endpoint);
+      return response.data;
+    } catch (error) {
+
+      console.error('Search API 호출 실패:', error);
+      throw error;
+    }
+  }
+}
 
 // 플레이리스트 API 서비스
 export class PlaylistService {
@@ -55,6 +75,7 @@ export class PlaylistService {
 // 메인 API 클래스 (모든 서비스를 통합)
 export class PlayceAPI {
   static playlist = PlaylistService;
+  static search = SearchService;
 }
 
 // 기본 내보내기

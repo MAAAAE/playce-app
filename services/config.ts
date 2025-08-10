@@ -1,9 +1,25 @@
 // API 설정 및 환경 관리
 
+import Constants from "expo-constants";
+
+
+const getApiUrl = () => {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const ipAddress = hostUri.split(':')[0];
+    const port = 8080;
+    return `http://${ipAddress}:${port}`;
+  }
+  // Fallback for production or other environments
+  return 'https://your-production-api-url.com';
+};
+
+export const EXPO_API_URL = getApiUrl();
+
 export const API_CONFIG = {
   // 환경별 베이스 URL
   BASE_URL: {
-    development: 'http://localhost:8080',
+    development: EXPO_API_URL,
     staging: 'https://staging-api.playce.com',
     production: 'https://api.playce.com',
   },
@@ -38,6 +54,7 @@ export const getEnvironment = (): keyof typeof API_CONFIG.BASE_URL => {
 // 베이스 URL 가져오기
 export const getBaseUrl = (): string => {
   const env = getEnvironment();
+
   return API_CONFIG.BASE_URL[env];
 };
 
@@ -47,6 +64,8 @@ export const ENDPOINTS = {
   PLAYLIST: '/playlist/generate',
   // 스트리밍 플레이리스트 생성 API
   PLAYLIST_STREAM: '/playlist/generate/stream',
+  // 명소검색 API
+  ATTRACTIONS_SEARCH: '/attractions/seoul',
 } as const;
 
 // 완전한 API URL 생성

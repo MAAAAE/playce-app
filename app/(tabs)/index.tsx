@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, StatusBar, TouchableWithoutFeedback, Platform, Keyboard, Dimensions } from 'react-native';
+import { View, StyleSheet, StatusBar, TouchableWithoutFeedback, Platform, Keyboard, Dimensions, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
@@ -8,9 +8,10 @@ import WaveBackground from '../../components/WaveBackground';
 import AppHeader from '../../components/AppHeader';
 import MainContent from '../../components/MainContent';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
-import { MOCK_PLACES, Place } from '@/data/mockData';
+import { Place } from '@/data/mockData';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchAnimation } from '@/hooks/useSearchAnimation';
+import PlayceAPI from '@/services/api';
 
 const MainScreen: React.FC = () => {
   const { handleFocus, handleBlur, topContainerAnimatedStyle, bottomContainerAnimatedStyle } = useSearchAnimation();
@@ -67,21 +68,25 @@ const MainScreen: React.FC = () => {
   const onFocus = () => { handleFocus(); setFocused(true); };
   const onBlur = () => { handleBlur(); setFocused(false); };
 
-  // debouncedSearchText 변화 시 검색
   useEffect(() => {
-    if (debouncedSearchText.length > 0) {
-      const filtered = MOCK_PLACES.filter(place =>
-          place.name.toLowerCase().includes(debouncedSearchText.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setIsLoading(false); // 검색 완료 -> 로딩 상태 OFF
-
-    } else {
-      setSuggestions([]);
-      setIsLoading(false); // 검색어가 없으면 로딩 비활성화
-
-    }
-  }, [debouncedSearchText]); // 의존성 배열을 debouncedSearchText로 변경
+    const search = async () => {
+      if (debouncedSearchText.length > 0) {
+        setIsLoading(true);
+        try {
+          const results = await PlayceAPI.search.searchAttractions(debouncedSearchText);
+          setSuggestions(results);
+        } catch (error) {
+          console.error('Search failed:', error);
+          Alert.alert('Search Failed', 'An error occurred while searching. Please try again.');
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    };
+    search();
+  }, [debouncedSearchText]);
 
   // Keyboard show/hide listeners with smooth animation
   useEffect(() => {

@@ -49,7 +49,7 @@ const MainContent: React.FC<MainContentProps> = ({
         />
         
         <SearchSuggestions
-          suggestions={suggestions.slice(0, 5)}
+          suggestions={suggestions}
           isLoading={isLoading}
         />
         

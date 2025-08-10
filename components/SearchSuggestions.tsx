@@ -67,8 +67,8 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLo
                             </View>
                         </AnimatedTouchableOpacity>
                     )}
-                    showsVerticalScrollIndicator={false}
-                    scrollEnabled={false}
+                    showsVerticalScrollIndicator={true}
+                    scrollEnabled={true}
                 />
             )}
         </Animated.View>
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.searchBarBg,
         borderRadius: 15,
         overflow: 'hidden', // borderRadius가 자식 요소에 적용되도록
-
+        maxHeight: 300,
     },
     suggestionItem: {
         flexDirection: 'row',
