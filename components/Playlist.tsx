@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Colors } from '../constants/Colors';
+import ReliableImage from './ReliableImage';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 
 // 데이터 타입을 명확히 정의합니다.
 export interface Song {
@@ -26,13 +28,19 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
                 <FlatList
                     data={songs}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <View style={styles.songItem}>
+                    renderItem={({ item, index }) => (
+                        <Animated.View 
+                            style={styles.songItem}
+                            entering={FadeInRight.delay(index * 200).duration(600)}
+                        >
                             {item.albumArt ? (
-                                <Image 
-                                    source={{ uri: item.albumArt }} 
+                                <ReliableImage 
+                                    uri={item.albumArt}
                                     style={styles.albumArt}
+                                    fallbackIconSize={24}
                                     resizeMode="cover"
+                                    loadDelay={index * 500}
+                                    retryDelay={2000}
                                 />
                             ) : (
                                 <View style={styles.albumArt} />
@@ -41,7 +49,7 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
                                 <Text style={styles.songTitle} numberOfLines={1}>{item.title}</Text>
                                 <Text style={styles.songArtist} numberOfLines={1}>{item.artist}</Text>
                             </View>
-                        </View>
+                        </Animated.View>
                     )}
                     scrollEnabled={false}
                 />
