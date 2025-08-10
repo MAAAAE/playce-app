@@ -68,25 +68,30 @@ const MainScreen: React.FC = () => {
   const onFocus = () => { handleFocus(); setFocused(true); };
   const onBlur = () => { handleBlur(); setFocused(false); };
 
-  useEffect(() => {
-    const search = async () => {
-      if (debouncedSearchText.length > 0) {
-        setIsLoading(true);
-        try {
-          const results = await PlayceAPI.search.searchAttractions(debouncedSearchText);
-          setSuggestions(results);
-        } catch (error) {
-          console.error('Search failed:', error);
-          Alert.alert('Search Failed', 'An error occurred while searching. Please try again.');
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setSuggestions([]);
+  const performSearch = async (text: string) => {
+    if (text.length > 0) {
+      setIsLoading(true);
+      try {
+        const results = await PlayceAPI.search.searchAttractions(text);
+        setSuggestions(results);
+      } catch (error) {
+        console.error('Search failed:', error);
+        Alert.alert('Search Failed', 'An error occurred while searching. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
-    };
-    search();
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  useEffect(() => {
+    performSearch(debouncedSearchText);
   }, [debouncedSearchText]);
+
+  const handleSearchSubmit = () => {
+    performSearch(searchText);
+  };
 
   // Keyboard show/hide listeners with smooth animation
   useEffect(() => {
@@ -131,6 +136,7 @@ const MainScreen: React.FC = () => {
                   onFocus={onFocus}
                   onBlur={onBlur}
                   onChangeText={setSearchText}
+                  onSubmitEditing={handleSearchSubmit}
                   suggestions={suggestions}
                   isLoading={isLoading}
                   popularPlaces={popularPlaces}

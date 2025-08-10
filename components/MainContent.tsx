@@ -14,6 +14,7 @@ interface MainContentProps {
   onFocus: () => void;
   onBlur: () => void;
   onChangeText: (text: string) => void;
+  onSubmitEditing: () => void;
   suggestions: Place[];
   isLoading: boolean;
   popularPlaces: Array<{ name: string; imageUrl: string }>;
@@ -26,6 +27,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onFocus,
   onBlur,
   onChangeText,
+  onSubmitEditing,
   suggestions,
   isLoading,
   popularPlaces,
@@ -46,6 +48,7 @@ const MainContent: React.FC<MainContentProps> = ({
           onFocus={onFocus}
           onBlur={onBlur}
           onChangeText={onChangeText}
+          onSubmitEditing={onSubmitEditing}
         />
         
         <SearchSuggestions
