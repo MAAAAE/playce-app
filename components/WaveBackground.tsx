@@ -16,7 +16,7 @@ const WAVE_SPEED = 4000; // ms
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-const Wave = ({ color, progress }) => {
+const Wave = ({ color, progress }: { color: string; progress: Animated.SharedValue<number> }) => {
     const animatedProps = useAnimatedProps(() => {
         // progress 값(0~1)에 따라 웨이브의 시작점을 이동시켜 움직이는 효과를 줍니다.
         const startX = -width * progress.value;
@@ -45,9 +45,9 @@ const WaveBackground = () => {
     return (
         <View style={styles.container}>
             <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                {/* 웨이브의 fill 색상을 반투명 색상으로 변경합니다. */}
-                <Wave color={Colors.wave.wave2} progress={progress2} />
-                <Wave color={Colors.wave.wave1} progress={progress1} />
+                {/* 더 어두운 반투명 웨이브 색상 사용 */}
+                <Wave color="rgba(26, 26, 46, 0.3)" progress={progress2} />
+                <Wave color="rgba(22, 33, 62, 0.2)" progress={progress1} />
             </Svg>
         </View>
 

@@ -95,11 +95,13 @@ const styles = StyleSheet.create({
         color: Colors.text,
         fontSize: 16,
         fontWeight: '600',
+        fontFamily: 'Pretendard-SemiBold',
     },
     addressText: {
         color: Colors.searchBarPlaceholder,
         fontSize: 12,
         marginTop: 2,
+        fontFamily: 'Pretendard-Regular',
     },
     loadingContainer: {
         justifyContent: 'center',

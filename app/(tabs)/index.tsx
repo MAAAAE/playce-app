@@ -1,27 +1,73 @@
-import React, {useEffect, useState} from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, StatusBar, TouchableWithoutFeedback, Platform, Keyboard, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Tabs } from 'expo-router';
 import WaveBackground from '../../components/WaveBackground';
-import SearchBar from '../../components/SearchBar'; // SearchBar 컴포넌트 import
-import { useSearchAnimation } from '@/hooks/useSearchAnimation'; // 커스텀 훅 import
-import Animated from 'react-native-reanimated';
-import {MOCK_PLACES, Place} from '@/data/mockData';
-import SearchSuggestions from "@/components/SearchSuggestions";
-import {useDebounce} from "@/hooks/useDebounce";
+import AppHeader from '../../components/AppHeader';
+import MainContent from '../../components/MainContent';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
+import { MOCK_PLACES, Place } from '@/data/mockData';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useSearchAnimation } from '@/hooks/useSearchAnimation';
 
 const MainScreen: React.FC = () => {
   const { handleFocus, handleBlur, topContainerAnimatedStyle, bottomContainerAnimatedStyle } = useSearchAnimation();
-
+  const insets = useSafeAreaInsets();
+  const [focused, setFocused] = useState(false);
   const [searchText, setSearchText] = useState('');
-
-  const debouncedSearchText = useDebounce(searchText, 500); // 500ms 지연된 값
-
+  const debouncedSearchText = useDebounce(searchText, 500);
   const [suggestions, setSuggestions] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
+  // Keyboard animation shared value
+  const keyboardHeight = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
+  const animatedShift = useSharedValue(0); // final shift applied
+  const topInsetSV = useSharedValue(insets.top || 0);
+  const bottomInsetSV = useSharedValue(insets.bottom || 0);
+  const windowHeight = Dimensions.get('window').height;
 
-  // 이제 debouncedSearchText가 변경될 때만 목업 데이터를 필터링합니다.
+  // Update inset shared values if they change
+  useEffect(() => {
+    topInsetSV.value = insets.top || 0;
+    bottomInsetSV.value = insets.bottom || 0;
+  }, [insets.top, insets.bottom, topInsetSV, bottomInsetSV]);
+
+  // Derive target shift so that content never crosses safe area top
+  useDerivedValue(() => {
+    const topPadding = topInsetSV.value;
+    const headerSpace = 46; // header height from AppHeader component
+    const safeContentTop = topPadding + headerSpace;
+    const bottomPadding = bottomInsetSV.value;
+    const availableHeight = windowHeight - safeContentTop - bottomPadding - keyboardHeight.value;
+    
+    let targetShift = 0;
+    if (keyboardHeight.value > 0 && contentHeight.value > availableHeight) {
+      const needed = contentHeight.value - availableHeight;
+      // Conservative shift - never more than 40% of keyboard height to avoid header overlap
+      targetShift = Math.min(needed, keyboardHeight.value * 0.4);
+    }
+    animatedShift.value = withTiming(targetShift, { duration: 300, easing: Easing.out(Easing.cubic) });
+  });
+
+  const animatedKeyboardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -animatedShift.value }],
+  }));
+
+  // 인기 장소 데이터
+  const popularPlaces = [
+    { name: 'Gyeongbokgung', imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=250&fit=crop&q=80' },
+    { name: 'Bukchon', imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=250&fit=crop&q=80' },
+    { name: 'Gangnam', imageUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&h=250&fit=crop&q=80' },
+    { name: 'Hongdae', imageUrl: 'https://images.unsplash.com/photo-1574594723019-f47c3cbb7d6e?w=400&h=250&fit=crop&q=80' },
+    { name: 'Myeongdong', imageUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=250&fit=crop&q=80' },
+  ];
+
+  const onFocus = () => { handleFocus(); setFocused(true); };
+  const onBlur = () => { handleBlur(); setFocused(false); };
+
+  // debouncedSearchText 변화 시 검색
   useEffect(() => {
     if (debouncedSearchText.length > 0) {
       const filtered = MOCK_PLACES.filter(place =>
@@ -37,40 +83,55 @@ const MainScreen: React.FC = () => {
     }
   }, [debouncedSearchText]); // 의존성 배열을 debouncedSearchText로 변경
 
+  // Keyboard show/hide listeners with smooth animation
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const h = e?.endCoordinates?.height || 0;
+      keyboardHeight.value = h; // raw height; smoothing handled in derived shift
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardHeight.value = 0;
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardHeight]);
+
 
 
   return (
       <>
         <Tabs.Screen options={{ headerShown: false, tabBarStyle: { display: 'none' } }} />
-        <TouchableWithoutFeedback onPress={handleBlur}>
+        <TouchableWithoutFeedback onPress={onBlur}>
           <LinearGradient
-              colors={Colors.backgroundGradient}
-              style={styles.container}
+            colors={Colors.backgroundGradient}
+            style={styles.container}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
           >
-            <WaveBackground />
+              <View style={styles.dimOverlay} />
+              <WaveBackground />
             <StatusBar barStyle="light-content" />
-            <SafeAreaView style={styles.safeArea}>
-              <View style={styles.header}>
-                <Text style={styles.logoText}>Play;ce</Text>
-              </View>
-              <View style={styles.content}>
-                <Animated.View style={[styles.topContainer, topContainerAnimatedStyle]}>
-                  <Text style={styles.title}>Experience Korea,</Text>
-                  <Text style={styles.title}>Explore K-POP</Text>
-                </Animated.View>
-
-                <Animated.View style={[styles.bottomContainer, bottomContainerAnimatedStyle]}>
-                  <SearchBar
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                      onChangeText={setSearchText} // 입력값을 state와 연결
-                  />
-                  <SearchSuggestions suggestions={suggestions.slice(0, 5)}
-                                     isLoading={isLoading}
-                  />
-                </Animated.View>
-              </View>
-            </SafeAreaView>
+            <View style={[styles.safeAreaLike, { paddingTop: insets.top || 0, paddingBottom: insets.bottom || 0 }]}>
+              <AppHeader />
+              <Animated.View style={[styles.animatedContentWrapper, animatedKeyboardStyle]} onLayout={(e) => { contentHeight.value = e.nativeEvent.layout.height; }}>
+                <MainContent
+                  focused={focused}
+                  topContainerAnimatedStyle={topContainerAnimatedStyle}
+                  bottomContainerAnimatedStyle={bottomContainerAnimatedStyle}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  onChangeText={setSearchText}
+                  suggestions={suggestions}
+                  isLoading={isLoading}
+                  popularPlaces={popularPlaces}
+                />
+              </Animated.View>
+            </View>
           </LinearGradient>
         </TouchableWithoutFeedback>
       </>
@@ -78,39 +139,22 @@ const MainScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  // 스타일은 이전과 거의 동일합니다.
-  container: {
+  container: { flex: 1 },
+  dimOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  safeAreaLike: {
     flex: 1,
+    width: '100%',
   },
-  safeArea: {
+  animatedContentWrapper: {
     flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  logoText: {
-    color: Colors.logo,
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 30,
-  },
-  topContainer: {
-    justifyContent: 'flex-end',
-    paddingBottom: 20,
-  },
-  bottomContainer: {
-    justifyContent: 'flex-start',
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 36,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-    lineHeight: 45,
+    marginTop: -150,
   },
 });
 
