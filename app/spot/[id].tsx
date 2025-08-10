@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, StatusBar, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -62,13 +62,32 @@ const MOCK_DATA: { [key: string]: { name: string; imageUrl: string; playlist: { 
 };
 
 const SpotDetailScreen = () => {
-    const { id, playlistData } = useLocalSearchParams<{ 
+    const { id, playlistData, destination } = useLocalSearchParams<{ 
         id: string; 
-        playlistData?: string; 
+        playlistData?: string;
+        destination?: string;
     }>();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const spotData = MOCK_DATA[id] || MOCK_DATA['1']; // id가 없으면 기본값 사용
+    
+    // 배경 이미지 로딩 상태 관리
+    const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
+    const [backgroundImageError, setBackgroundImageError] = useState(false);
+    
+    const handleBackgroundImageLoad = useCallback(() => {
+        setBackgroundImageLoaded(true);
+        setBackgroundImageError(false);
+    }, []);
+    
+    const handleBackgroundImageError = useCallback(() => {
+        setBackgroundImageError(true);
+        setBackgroundImageLoaded(false);
+    }, []);
+    
+    console.log('🎬 상세페이지 렌더링 - id:', id);
+    console.log('🎬 상세페이지 - destination:', destination);
+    console.log('🎬 상세페이지 - playlistData (원본):', playlistData);
     
     // API에서 받은 플레이리스트 데이터 파싱
     const apiPlaylistData = useMemo(() => {
@@ -175,6 +194,11 @@ const SpotDetailScreen = () => {
                             source={{ uri: spotData.imageUrl }} 
                             style={styles.headerBackground}
                             resizeMode="cover"
+                            onLoad={handleBackgroundImageLoad}
+                            onError={handleBackgroundImageError}
+                            // 이미지 캐싱 정책
+                            defaultSource={undefined}
+                            fadeDuration={300}
                         >
                             <LinearGradient
                                 colors={['rgba(8,8,8,0)', 'rgba(17,17,17,0.93)']}
@@ -182,6 +206,17 @@ const SpotDetailScreen = () => {
                                 style={styles.headerGradient}
                             />
                         </ImageBackground>
+                        
+                        {/* 백그라운드 이미지 로딩 실패시 대체 배경 */}
+                        {backgroundImageError && (
+                            <View style={[styles.headerBackground, styles.fallbackBackground]}>
+                                <LinearGradient
+                                    colors={['rgba(8,8,8,0)', 'rgba(17,17,17,0.93)']}
+                                    locations={[0.19, 0.93]}
+                                    style={styles.headerGradient}
+                                />
+                            </View>
+                        )}
                     </Animated.View>
 
                     {/* Header Content */}
@@ -342,6 +377,14 @@ const styles = StyleSheet.create({
         right: 0,
         height: 230,
         pointerEvents: 'none',
+    },
+    fallbackBackground: {
+        backgroundColor: '#1a1a1a',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
 });
 

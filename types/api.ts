@@ -18,6 +18,22 @@ export interface SongRecommendation {
   cover: string; // 앨범 커버 URL
 }
 
+// 스트리밍 응답 타입
+export interface StreamingSongData {
+  title: string;
+  artist: string;
+  reason: string;
+  cover: string;
+  index: number; // 곡 순서
+  total: number; // 전체 곡 수
+}
+
+export interface StreamingStatus {
+  type: 'song' | 'complete' | 'error';
+  data?: StreamingSongData | PlaylistResponseDto;
+  error?: string;
+}
+
 // API 에러 응답 타입
 export interface ApiErrorResponse {
   message: string;

@@ -45,6 +45,8 @@ export const getBaseUrl = (): string => {
 export const ENDPOINTS = {
   // 플레이리스트 생성 API
   PLAYLIST: '/playlist/generate',
+  // 스트리밍 플레이리스트 생성 API
+  PLAYLIST_STREAM: '/playlist/generate/stream',
 } as const;
 
 // 완전한 API URL 생성
