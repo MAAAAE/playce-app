@@ -53,7 +53,7 @@ const PlaylistGenerationScreen = () => {
       };
       
       generatePlaylist(request).then((result) => {
-        if (result && result.recommendations && result.recommendations.length > 0) {
+        if (result) {
           setTimeout(() => {
             router.replace({
               pathname: "/spot/[id]",

@@ -62,15 +62,21 @@ const MOCK_DATA: { [key: string]: { name: string; imageUrl: string; playlist: { 
 };
 
 const SpotDetailScreen = () => {
-    const { id, playlistData, destination } = useLocalSearchParams<{ 
+    const { id, playlistData, place } = useLocalSearchParams<{ 
         id: string; 
         playlistData?: string;
-        destination?: string;
+        place?: string;
     }>();
+    const placeObject = useMemo(() => place ? JSON.parse(place) : null, [place]);
+
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const spotData = MOCK_DATA[id] || MOCK_DATA['1']; // id가 없으면 기본값 사용
     
+    // Use data from placeObject if available, otherwise fallback to mock
+    const spotName = placeObject?.name || MOCK_DATA[id]?.name || 'Unknown Place';
+    // NOTE: The 'place' object from the API doesn't have an image yet. Using mock image as a fallback.
+    const spotImageUrl = placeObject?.image || MOCK_DATA[id]?.imageUrl || 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80';
+
     // 배경 이미지 로딩 상태 관리
     const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
     const [backgroundImageError, setBackgroundImageError] = useState(false);
@@ -84,10 +90,6 @@ const SpotDetailScreen = () => {
         setBackgroundImageError(true);
         setBackgroundImageLoaded(false);
     }, []);
-    
-    console.log('🎬 상세페이지 렌더링 - id:', id);
-    console.log('🎬 상세페이지 - destination:', destination);
-    console.log('🎬 상세페이지 - playlistData (원본):', playlistData);
     
     // API에서 받은 플레이리스트 데이터 파싱
     const apiPlaylistData = useMemo(() => {
@@ -107,13 +109,14 @@ const SpotDetailScreen = () => {
         if (apiPlaylistData?.recommendations) {
             return apiPlaylistData.recommendations.map((song, index) => ({
                 id: `api-${index}`,
-                title: song.title, // 변경된 API에서는 title만 제공
+                title: song.title,
                 artist: song.artist,
                 albumArt: song.cover,
             }));
         }
-        return spotData.playlist;
-    }, [apiPlaylistData, spotData.playlist]);
+        // If there's no generated playlist, return an empty array.
+        return [];
+    }, [apiPlaylistData]);
     const todayIndex = new Date().getDate() - 1; // 오늘 날짜(1~30)를 인덱스(0~29)로
 
     // Animated scroll value
@@ -191,7 +194,7 @@ const SpotDetailScreen = () => {
                     {/* Image Background - Only visible when expanded */}
                     <Animated.View style={[styles.imageContainer, headerBackgroundOpacity]}>
                         <ImageBackground 
-                            source={{ uri: spotData.imageUrl }} 
+                            source={{ uri: spotImageUrl }}
                             style={styles.headerBackground}
                             resizeMode="cover"
                             onLoad={handleBackgroundImageLoad}
@@ -229,7 +232,7 @@ const SpotDetailScreen = () => {
                             >
                                 <Ionicons name="chevron-back" size={24} color={Colors.text} />
                             </TouchableOpacity>
-                            <Text style={styles.collapsedTitle}>{spotData.name}</Text>
+                            <Text style={styles.collapsedTitle}>{spotName}</Text>
                             <View style={{ width: 44 }} />
                         </Animated.View>
 
@@ -245,7 +248,7 @@ const SpotDetailScreen = () => {
 
                         {/* Hero Title */}
                         <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
-                            <Text style={styles.heroTitle}>{spotData.name}</Text>
+                            <Text style={styles.heroTitle}>{spotName}</Text>
                         </Animated.View>
                     </View>
                 </Animated.View>
@@ -259,7 +262,17 @@ const SpotDetailScreen = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.contentContainer}>
-                        <Playlist songs={playlistSongs} />
+                        {playlistSongs.length > 0 ? (
+                            <Playlist songs={playlistSongs} />
+                        ) : (
+                            <View style={{ alignItems: 'center', paddingVertical: 60, paddingHorizontal: 30, marginHorizontal: 20, backgroundColor: '#1C1C1E', borderRadius: 16 }}>
+                                <Ionicons name="musical-notes-outline" size={50} color={Colors.secondaryText} style={{ marginBottom: 20 }} />
+                                <Text style={{ color: Colors.text, fontSize: 18, fontFamily: 'Outfit-Medium', marginBottom: 10 }}>No Playlist Found</Text>
+                                <Text style={{ color: Colors.secondaryText, fontSize: 15, fontFamily: 'Pretendard-Regular', textAlign: 'center', lineHeight: 22 }}>
+                                    Our AI couldn't find the right songs for this spot. Try searching for a different place.
+                                </Text>
+                            </View>
+                        )}
                         <CongestionChart data={MOCK_CHART_DATA} currentIndex={todayIndex} />
                         
                         {/* Bottom gradient overlay */}
