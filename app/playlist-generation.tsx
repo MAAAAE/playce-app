@@ -25,10 +25,11 @@ import ReliableImage from '@/components/ReliableImage';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const PlaylistGenerationScreen = () => {
-  const { destination, playlistSize } = useLocalSearchParams<{
-    destination: string;
+  const { place, playlistSize } = useLocalSearchParams<{
+    place: string;
     playlistSize?: string;
   }>();
+  const placeObject = place ? JSON.parse(place) : null;
   
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -44,9 +45,9 @@ const PlaylistGenerationScreen = () => {
   
   // 컴포넌트 마운트 시 플레이리스트 생성 시작
   useEffect(() => {
-    if (destination) {
+    if (placeObject) {
       const request = {
-        destination,
+        destination: placeObject.name,
         season: 'All seasons',
         playlistSize: playlistSize ? parseInt(playlistSize) : 5,
       };
@@ -59,14 +60,14 @@ const PlaylistGenerationScreen = () => {
               params: {
                 id: 'generated',
                 playlistData: JSON.stringify(result),
-                destination: destination,
+                place: place,
               },
             });
           }, 1000);
         }
       });
     }
-  }, [destination, playlistSize]);
+  }, [place, playlistSize]);
 
   const handleCancel = () => {
     cancelGeneration();
@@ -114,7 +115,7 @@ const PlaylistGenerationScreen = () => {
           style={styles.destinationContainer}
         >
           <Text style={styles.destinationLabel}>Destination</Text>
-          <Text style={styles.destinationText}>{destination}</Text>
+          <Text style={styles.destinationText}>{placeObject?.name}</Text>
         </Animated.View>
         
         {/* Progress Bar */}

@@ -7,9 +7,10 @@ interface SearchBarProps {
     onFocus: () => void;
     onBlur: () => void;
     onChangeText: (text: string) => void; // 이 부분을 추가
+    onSubmitEditing: () => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onFocus, onBlur, onChangeText }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onFocus, onBlur, onChangeText, onSubmitEditing }) => {
     return (
         <View style={styles.searchBar}>
             <AIIcon size={20} color={Colors.searchIcon} />
@@ -20,6 +21,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onFocus, onBlur, onChangeText }) 
                 onFocus={onFocus}
                 onBlur={onBlur} // onBlur도 props로 받도록 수정
                 onChangeText={onChangeText} // 이 부분을 추가
+                onSubmitEditing={onSubmitEditing}
 
             />
         </View>

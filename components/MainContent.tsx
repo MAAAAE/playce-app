@@ -5,7 +5,7 @@ import SearchBar from './SearchBar';
 import SearchSuggestions from './SearchSuggestions';
 import PlaceCard from './PlaceCard';
 import Animated from 'react-native-reanimated';
-import { Place } from '@/data/mockData';
+import { Place } from '@/data/Data';
 
 interface MainContentProps {
   focused: boolean;
@@ -14,6 +14,7 @@ interface MainContentProps {
   onFocus: () => void;
   onBlur: () => void;
   onChangeText: (text: string) => void;
+  onSubmitEditing: () => void;
   suggestions: Place[];
   isLoading: boolean;
   popularPlaces: Array<{ name: string; imageUrl: string }>;
@@ -26,6 +27,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onFocus,
   onBlur,
   onChangeText,
+  onSubmitEditing,
   suggestions,
   isLoading,
   popularPlaces,
@@ -46,10 +48,11 @@ const MainContent: React.FC<MainContentProps> = ({
           onFocus={onFocus}
           onBlur={onBlur}
           onChangeText={onChangeText}
+          onSubmitEditing={onSubmitEditing}
         />
         
         <SearchSuggestions
-          suggestions={suggestions.slice(0, 5)}
+          suggestions={suggestions}
           isLoading={isLoading}
         />
         

@@ -14,7 +14,7 @@ import Animated, {
 import { Colors } from '@/constants/Colors';
 import Playlist from '../../components/Playlist';
 import CongestionChart from "@/components/congestionChart";
-import {MOCK_CHART_DATA} from "@/data/mockData";
+import {MOCK_CHART_DATA} from "@/data/Data";
 import { PlaylistResponseDto } from '@/types/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
