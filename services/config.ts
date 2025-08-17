@@ -66,6 +66,8 @@ export const ENDPOINTS = {
   PLAYLIST_STREAM: '/playlist/generate/stream',
   // 명소검색 API
   ATTRACTIONS_SEARCH: '/attractions/seoul',
+  // 혼잡도 조회 API
+  CONGESTION: '/congestion',
 } as const;
 
 // 완전한 API URL 생성
