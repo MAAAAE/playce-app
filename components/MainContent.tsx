@@ -5,7 +5,7 @@ import SearchBar from './SearchBar';
 import SearchSuggestions from './SearchSuggestions';
 import PlaceCard from './PlaceCard';
 import Animated from 'react-native-reanimated';
-import { Place } from '@/data/mockData';
+import { Place } from '@/data/Data';
 
 interface MainContentProps {
   focused: boolean;

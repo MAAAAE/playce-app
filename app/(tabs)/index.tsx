@@ -8,7 +8,7 @@ import WaveBackground from '../../components/WaveBackground';
 import AppHeader from '../../components/AppHeader';
 import MainContent from '../../components/MainContent';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
-import { Place } from '@/data/mockData';
+import { Place } from '@/data/Data';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchAnimation } from '@/hooks/useSearchAnimation';
 import PlayceAPI from '@/services/api';

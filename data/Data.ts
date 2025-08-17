@@ -2,6 +2,9 @@ export interface Place {
     id: string;
     name: string;
     address: string; // 주소 정보 추가
+    image: string;
+    smallImage: string;
+    sigunguCode: string;
 }
 
 export interface ChartDataPoint {

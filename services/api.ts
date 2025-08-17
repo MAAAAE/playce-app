@@ -6,7 +6,7 @@ import {
   PlaylistRequestDto,
   PlaylistResponseDto,
 } from '../types/api';
-import { Place } from '@/data/mockData';
+import { Place } from '@/data/Data';
 
 // 검색 API 서비스
 export class SearchService {

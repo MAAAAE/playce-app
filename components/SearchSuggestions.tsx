@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
 import { Colors } from '@/constants/Colors';
-import { Place } from '@/data/mockData';
+import { Place } from '@/data/Data';
 import Animated, {FadeIn, FadeInDown, FadeOut} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import {router} from "expo-router";
@@ -19,7 +19,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLo
         router.push({
             pathname: "/playlist-generation",
             params: {
-                destination: place.name,
+                place: JSON.stringify(place),
                 season: "사계절",
                 playlistSize: "10", // 최소 5곡으로 수정
             },
