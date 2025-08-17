@@ -3,6 +3,7 @@
 import {httpClient, httpGet, HttpResponse} from './httpClient';
 import { ENDPOINTS } from './config';
 import {
+  CongestionResponseDto,
   PlaylistRequestDto,
   PlaylistResponseDto,
 } from '../types/api';
@@ -72,10 +73,30 @@ export class PlaylistService {
   }
 }
 
+// 혼잡도 API 서비스
+export class CongestionService {
+  static async getCongestion(sigunguCode: string): Promise<CongestionResponseDto> {
+    if (!sigunguCode?.trim()) {
+      console.warn('sigunguCode is missing, cannot fetch congestion data.');
+      return [];
+    }
+
+    try {
+      const endpoint = `${ENDPOINTS.CONGESTION}/${sigunguCode}`;
+      const response: HttpResponse<CongestionResponseDto> = await httpGet(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Congestion API 호출 실패:', error);
+      return [];
+    }
+  }
+}
+
 // 메인 API 클래스 (모든 서비스를 통합)
 export class PlayceAPI {
   static playlist = PlaylistService;
   static search = SearchService;
+  static congestion = CongestionService;
 }
 
 // 기본 내보내기

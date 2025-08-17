@@ -39,3 +39,12 @@ export interface ApiErrorResponse {
   message: string;
   timestamp: string;
 }
+
+// 혼잡도 차트 데이터 포인트 타입
+export interface ChartDataPoint {
+    day: number;
+    level: number; // 0 ~ 100 사이의 혼잡도 레벨
+}
+
+// 혼잡도 API 응답 타입
+export type CongestionResponseDto = ChartDataPoint[];

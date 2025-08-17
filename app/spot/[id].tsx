@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,8 +14,9 @@ import Animated, {
 import { Colors } from '@/constants/Colors';
 import Playlist from '../../components/Playlist';
 import CongestionChart from "@/components/congestionChart";
-import {MOCK_CHART_DATA} from "@/data/Data";
-import { PlaylistResponseDto } from '@/types/api';
+import { Place } from '@/data/Data';
+import { ChartDataPoint, PlaylistResponseDto } from '@/types/api';
+import PlayceAPI from '@/services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_EXPANDED_HEIGHT = 356;
@@ -26,38 +27,7 @@ const MOCK_DATA: { [key: string]: { name: string; imageUrl: string; playlist: { 
     '1': { // Gyeongbokgung
         name: 'Gyeongbokgung',
         imageUrl: 'https://conlab.visitkorea.or.kr/api/depot/public/depot-flow/query/download-image/4bd3982f-59df-47a4-8743-3c609f639ccb/it14',
-        playlist: [
-            { 
-                id: 's1', 
-                title: 'Daechwita', 
-                artist: 'SUGA of BTS',
-                albumArt: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=300&auto=format&fit=crop'
-            },
-            { 
-                id: 's2', 
-                title: 'How You Like That', 
-                artist: 'BLACKPINK',
-                albumArt: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=300&auto=format&fit=crop'
-            },
-            { 
-                id: 's3', 
-                title: 'Dynamite', 
-                artist: 'BTS',
-                albumArt: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=300&auto=format&fit=crop'
-            },
-            { 
-                id: 's4', 
-                title: 'Next Level', 
-                artist: 'aespa',
-                albumArt: 'https://images.unsplash.com/photo-1618609378039-b572f64c5b42?q=80&w=300&auto=format&fit=crop'
-            },
-            { 
-                id: 's5', 
-                title: 'ON', 
-                artist: 'BTS',
-                albumArt: 'https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=300&auto=format&fit=crop'
-            },
-        ],
+        playlist: [],
     },
 };
 
@@ -67,20 +37,34 @@ const SpotDetailScreen = () => {
         playlistData?: string;
         place?: string;
     }>();
-    const placeObject = useMemo(() => place ? JSON.parse(place) : null, [place]);
+    const placeObject = useMemo(() => place ? JSON.parse(place) as Place : null, [place]);
 
     const router = useRouter();
     const insets = useSafeAreaInsets();
     
-    // Use data from placeObject if available, otherwise fallback to mock
     const spotName = placeObject?.name || MOCK_DATA[id]?.name || 'Unknown Place';
-    // NOTE: The 'place' object from the API doesn't have an image yet. Using mock image as a fallback.
     const spotImageUrl = placeObject?.image || MOCK_DATA[id]?.imageUrl || 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80';
 
-    // 배경 이미지 로딩 상태 관리
     const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
     const [backgroundImageError, setBackgroundImageError] = useState(false);
+    const [congestionData, setCongestionData] = useState<ChartDataPoint[]>([]);
+
+    useEffect(() => {
+      const fetchCongestionData = async () => {
+        if (placeObject?.sigunguCode) {
+          try {
+            const data = await PlayceAPI.congestion.getCongestion(placeObject.sigunguCode);
+            setCongestionData(data);
+          } catch (error) {
+            console.error("Failed to fetch congestion data", error);
+            setCongestionData([]); // Set to empty on error
+          }
+        }
+      };
     
+      fetchCongestionData();
+    }, [placeObject]);
+
     const handleBackgroundImageLoad = useCallback(() => {
         setBackgroundImageLoaded(true);
         setBackgroundImageError(false);
@@ -91,7 +75,6 @@ const SpotDetailScreen = () => {
         setBackgroundImageLoaded(false);
     }, []);
     
-    // API에서 받은 플레이리스트 데이터 파싱
     const apiPlaylistData = useMemo(() => {
         if (playlistData) {
             try {
@@ -104,7 +87,6 @@ const SpotDetailScreen = () => {
         return null;
     }, [playlistData]);
     
-    // API 데이터를 Playlist 컴포넌트 형식으로 변환
     const playlistSongs = useMemo(() => {
         if (apiPlaylistData?.recommendations) {
             return apiPlaylistData.recommendations.map((song, index) => ({
@@ -114,12 +96,10 @@ const SpotDetailScreen = () => {
                 albumArt: song.cover,
             }));
         }
-        // If there's no generated playlist, return an empty array.
         return [];
     }, [apiPlaylistData]);
-    const todayIndex = new Date().getDate() - 1; // 오늘 날짜(1~30)를 인덱스(0~29)로
+    const todayIndex = new Date().getDate() - 1;
 
-    // Animated scroll value
     const scrollY = useSharedValue(0);
 
     const scrollHandler = useAnimatedScrollHandler({
@@ -128,7 +108,6 @@ const SpotDetailScreen = () => {
         },
     });
 
-    // Header height animation
     const headerHeight = useAnimatedStyle(() => {
         const height = interpolate(
             scrollY.value,
@@ -142,7 +121,6 @@ const SpotDetailScreen = () => {
         };
     });
 
-    // Header title opacity (collapsed state)
     const headerTitleOpacity = useAnimatedStyle(() => {
         const opacity = interpolate(
             scrollY.value,
@@ -156,7 +134,6 @@ const SpotDetailScreen = () => {
         };
     });
 
-    // Hero title opacity (expanded state)
     const heroTitleOpacity = useAnimatedStyle(() => {
         const opacity = interpolate(
             scrollY.value,
@@ -170,7 +147,6 @@ const SpotDetailScreen = () => {
         };
     });
 
-    // Header background opacity (image visibility)
     const headerBackgroundOpacity = useAnimatedStyle(() => {
         const opacity = interpolate(
             scrollY.value,
@@ -189,9 +165,7 @@ const SpotDetailScreen = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" />
             <View style={styles.container}>
-                {/* Animated Header */}
                 <Animated.View style={[styles.header, headerHeight, { backgroundColor: '#111111' }]}>
-                    {/* Image Background - Only visible when expanded */}
                     <Animated.View style={[styles.imageContainer, headerBackgroundOpacity]}>
                         <ImageBackground 
                             source={{ uri: spotImageUrl }}
@@ -199,7 +173,6 @@ const SpotDetailScreen = () => {
                             resizeMode="cover"
                             onLoad={handleBackgroundImageLoad}
                             onError={handleBackgroundImageError}
-                            // 이미지 캐싱 정책
                             defaultSource={undefined}
                             fadeDuration={300}
                         >
@@ -210,7 +183,6 @@ const SpotDetailScreen = () => {
                             />
                         </ImageBackground>
                         
-                        {/* 백그라운드 이미지 로딩 실패시 대체 배경 */}
                         {backgroundImageError && (
                             <View style={[styles.headerBackground, styles.fallbackBackground]}>
                                 <LinearGradient
@@ -222,9 +194,7 @@ const SpotDetailScreen = () => {
                         )}
                     </Animated.View>
 
-                    {/* Header Content */}
                     <View style={styles.headerContent}>
-                        {/* Collapsed Header Title */}
                         <Animated.View style={[styles.collapsedHeader, { paddingTop: insets.top }, headerTitleOpacity]}>
                             <TouchableOpacity 
                                 style={styles.backButton}
@@ -236,7 +206,6 @@ const SpotDetailScreen = () => {
                             <View style={{ width: 44 }} />
                         </Animated.View>
 
-                        {/* Hero Back Button - Independent positioning */}
                         <Animated.View style={[styles.heroBackButtonContainer, { paddingTop: insets.top }, heroTitleOpacity]}>
                             <TouchableOpacity 
                                 style={styles.heroBackButton}
@@ -246,14 +215,12 @@ const SpotDetailScreen = () => {
                             </TouchableOpacity>
                         </Animated.View>
 
-                        {/* Hero Title */}
                         <Animated.View style={[styles.heroTitleContainer, heroTitleOpacity]}>
                             <Text style={styles.heroTitle}>{spotName}</Text>
                         </Animated.View>
                     </View>
                 </Animated.View>
 
-                {/* Scrollable Content */}
                 <Animated.ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={[styles.scrollContent, { paddingTop: HEADER_EXPANDED_HEIGHT }]}
@@ -273,9 +240,8 @@ const SpotDetailScreen = () => {
                                 </Text>
                             </View>
                         )}
-                        <CongestionChart data={MOCK_CHART_DATA} currentIndex={todayIndex} />
+                        <CongestionChart data={congestionData} currentIndex={todayIndex} />
                         
-                        {/* Bottom gradient overlay */}
                         <LinearGradient
                             colors={['rgba(8,8,8,0)', '#111111']}
                             locations={[0.05, 1]}
