@@ -50,13 +50,16 @@ const SpotDetailScreen = () => {
     const [congestionData, setCongestionData] = useState<ChartDataPoint[]>([]);
 
     useEffect(() => {
+      console.log('[Debug] placeObject:', JSON.stringify(placeObject, null, 2));
       const fetchCongestionData = async () => {
         if (placeObject?.sigunguCode) {
           try {
+            console.log(`[Debug] Fetching congestion data for sigunguCode: ${placeObject.sigunguCode}`);
             const data = await PlayceAPI.congestion.getCongestion(placeObject.sigunguCode);
+            console.log('[Debug] Congestion data received:', data);
             setCongestionData(data);
           } catch (error) {
-            console.error("Failed to fetch congestion data", error);
+            console.error("[Debug] Failed to fetch congestion data", error);
             setCongestionData([]); // Set to empty on error
           }
         }
@@ -98,7 +101,21 @@ const SpotDetailScreen = () => {
         }
         return [];
     }, [apiPlaylistData]);
-    const todayIndex = new Date().getDate() - 1;
+
+    const todayIndex = useMemo(() => {
+        if (congestionData.length === 0) {
+            return 0;
+        }
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayString = `${year}${month}${day}`;
+        const todayNumber = parseInt(todayString, 10);
+        
+        const index = congestionData.findIndex(d => d.day === todayNumber);
+        return index > -1 ? index : 0;
+    }, [congestionData]);
 
     const scrollY = useSharedValue(0);
 

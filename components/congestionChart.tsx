@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
-import { ChartDataPoint } from '@/data/Data';
+import { ChartDataPoint } from '@/types/api';
 import Svg, { Path, Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -112,6 +112,16 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
 
+    const formattedDate = useMemo(() => {
+        const dayNumber = data[selectedIndex]?.day;
+        if (!dayNumber) return '';
+        const dayString = String(dayNumber);
+        if (dayString.length !== 8) return ''; // Should still be 8 digits
+        const month = dayString.substring(4, 6);
+        const dayOfMonth = dayString.substring(6, 8);
+        return `${month}/${dayOfMonth}`;
+    }, [data, selectedIndex]);
+
     // 선택된 점의 좌표
     const selectedPoint = points[selectedIndex] || points[currentIndex];
 
@@ -128,7 +138,7 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                     <View style={[styles.levelIndicator, { borderColor: levelColor }]}>
                         <Text style={styles.levelLabel}>crowd level</Text>
                         <Text style={[styles.levelValue, { color: '#E8E8E8' }]}>{levelText}</Text>
-                        <Text style={styles.levelDate}>July {selectedIndex + 1}</Text>
+                        <Text style={styles.levelDate}>{formattedDate}</Text>
                     </View>
 
                     {/* Chart */}
