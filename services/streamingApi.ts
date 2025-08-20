@@ -22,30 +22,22 @@ export class StreamingApiClient {
       this.closeConnection();
       
       const url = buildApiUrl('/playlist/generate/stream');
-      const headers = {
-        ...getAuthHeaders(),
-        'Accept': 'text/event-stream, application/json, */*',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      };
+      const authHeaders = await getAuthHeaders();
       
-      const authHeaders = getAuthHeaders();
       const eventSourceConfig = {
         method: 'POST',
         headers: {
           ...authHeaders,
-          'Content-Type': 'application/json',
           'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify(request),
-        pollingInterval: 0,
+        pollingInterval: 0, // Disables polling, relies on server-sent events
         debug: false,
       };
       
       this.eventSource = new EventSource(url, eventSourceConfig);
       
-      this.eventSource.addEventListener('open', (event) => {
+      this.eventSource.addEventListener('open', () => {
         // Connection opened
       });
       
@@ -53,27 +45,22 @@ export class StreamingApiClient {
         this.handleEventData(event.data, request, callbacks);
       });
       
-      try {
-        (this.eventSource as any).addEventListener('playlist-update', (event: any) => {
-          this.handleEventData(event.data, request, callbacks);
-        });
-      } catch (e) {
-        // Ignore registration errors
-      }
+      // Custom event for playlist updates
+      this.eventSource.addEventListener('playlist-update', (event: any) => {
+        this.handleEventData(event.data, request, callbacks);
+      });
       
       this.eventSource.addEventListener('error', (event: any) => {
         if (event.type === 'error') {
-          callbacks.onError(`Connection error: ${event.message || 'Unknown error'}`);
+          callbacks.onError(event.message ? `Connection error: ${event.message}` : 'Unknown connection error');
         } else if (event.type === 'exception') {
-          callbacks.onError(`Exception error: ${event.message || event.error?.message || 'Unknown exception'}`);
-        } else {
-          callbacks.onError('Connection error occurred.');
+          callbacks.onError(`Exception: ${event.message || 'An unknown exception occurred'}`);
         }
         this.closeConnection();
       });
       
     } catch (error) {
-      callbacks.onError(error instanceof Error ? error.message : 'Connection error occurred.');
+      callbacks.onError(error instanceof Error ? error.message : 'Failed to start streaming connection.');
     }
   }
   
@@ -92,7 +79,7 @@ export class StreamingApiClient {
     if (data === '[DONE]') {
       const playlistData: PlaylistResponseDto = {
         destination: request.destination,
-        recommendations: [],
+        recommendations: [], // Recommendations will be filled by the onSong callbacks
       };
       callbacks.onComplete(playlistData);
       this.closeConnection();
@@ -103,7 +90,7 @@ export class StreamingApiClient {
       const serverData = JSON.parse(data);
       this.handleServerMessage(serverData, request, callbacks);
     } catch (parseError) {
-      // Parsing failure is logged but not treated as an error
+      // Ignore parsing errors for non-JSON messages
     }
   }
 
@@ -143,7 +130,7 @@ export class StreamingApiClient {
         break;
       case 'START':
       case 'PROGRESS':
-        // Informational messages
+        // Informational messages, do nothing
         break;
       default:
         // Unknown message type

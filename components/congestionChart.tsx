@@ -19,6 +19,7 @@ interface SVGPoint {
 // 차트의 크기를 정의
 const CHART_WIDTH = 303; // 피그마 디자인에 맞춤
 const CHART_HEIGHT = 80;
+const VERTICAL_PADDING = 10; // 상하 여백 추가
 
 // 차트 데이터를 부드러운 곡선 SVG 경로 데이터로 변환하는 헬퍼 함수
 const createSmoothPath = (points: SVGPoint[]): string => {
@@ -76,9 +77,10 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const lastHapticIndex = useSharedValue(currentIndex);
     // data를 SVG 좌표로 변환
     const points = useMemo(() => {
+        if (data.length === 0) return [];
         return data.map((point, index) => {
             const x = (index / (data.length - 1)) * CHART_WIDTH;
-            const y = CHART_HEIGHT - (point.level / 100) * CHART_HEIGHT;
+            const y = (CHART_HEIGHT - VERTICAL_PADDING * 2) - (point.level / 100) * (CHART_HEIGHT - VERTICAL_PADDING * 2) + VERTICAL_PADDING;
             return { x, y };
         });
     }, [data]);

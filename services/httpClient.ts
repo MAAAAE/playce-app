@@ -74,8 +74,9 @@ export const httpClient = async <T = any>(
   const url = buildApiUrl(endpoint);
   
   // 헤더 구성
+  const baseHeaders = await getAuthHeaders();
   const headers = {
-    ...getAuthHeaders(),
+    ...baseHeaders,
     ...customHeaders,
   };
 
