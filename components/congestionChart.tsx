@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
-import { ChartDataPoint } from '@/data/Data';
+import { ChartDataPoint } from '@/types/api';
 import Svg, { Path, Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -19,6 +19,7 @@ interface SVGPoint {
 // 차트의 크기를 정의
 const CHART_WIDTH = 303; // 피그마 디자인에 맞춤
 const CHART_HEIGHT = 80;
+const VERTICAL_PADDING = 10; // 상하 여백 추가
 
 // 차트 데이터를 부드러운 곡선 SVG 경로 데이터로 변환하는 헬퍼 함수
 const createSmoothPath = (points: SVGPoint[]): string => {
@@ -76,9 +77,10 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const lastHapticIndex = useSharedValue(currentIndex);
     // data를 SVG 좌표로 변환
     const points = useMemo(() => {
+        if (data.length === 0) return [];
         return data.map((point, index) => {
             const x = (index / (data.length - 1)) * CHART_WIDTH;
-            const y = CHART_HEIGHT - (point.level / 100) * CHART_HEIGHT;
+            const y = (CHART_HEIGHT - VERTICAL_PADDING * 2) - (point.level / 100) * (CHART_HEIGHT - VERTICAL_PADDING * 2) + VERTICAL_PADDING;
             return { x, y };
         });
     }, [data]);
@@ -112,6 +114,16 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
 
+    const formattedDate = useMemo(() => {
+        const dayNumber = data[selectedIndex]?.day;
+        if (!dayNumber) return '';
+        const dayString = String(dayNumber);
+        if (dayString.length !== 8) return ''; // Should still be 8 digits
+        const month = dayString.substring(4, 6);
+        const dayOfMonth = dayString.substring(6, 8);
+        return `${month}/${dayOfMonth}`;
+    }, [data, selectedIndex]);
+
     // 선택된 점의 좌표
     const selectedPoint = points[selectedIndex] || points[currentIndex];
 
@@ -128,7 +140,7 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                     <View style={[styles.levelIndicator, { borderColor: levelColor }]}>
                         <Text style={styles.levelLabel}>crowd level</Text>
                         <Text style={[styles.levelValue, { color: '#E8E8E8' }]}>{levelText}</Text>
-                        <Text style={styles.levelDate}>July {selectedIndex + 1}</Text>
+                        <Text style={styles.levelDate}>{formattedDate}</Text>
                     </View>
 
                     {/* Chart */}

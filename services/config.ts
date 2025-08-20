@@ -1,7 +1,7 @@
 // API 설정 및 환경 관리
 
 import Constants from "expo-constants";
-
+import { getDeviceUUID, getIPAddress } from './device';
 
 const getApiUrl = () => {
   const hostUri = Constants.expoConfig?.hostUri;
@@ -78,12 +78,20 @@ export const buildApiUrl = (endpoint: string): string => {
 };
 
 // API 키 또는 인증 토큰 관리 (향후 확장용)
-export const getAuthHeaders = (): Record<string, string> => {
+export const getAuthHeaders = async (): Promise<Record<string, string>> => {
+  const [uuid, ip] = await Promise.all([getDeviceUUID(), getIPAddress()]);
+
+  const headers = {
+    ...API_CONFIG.HEADERS,
+    'X-Device-UUID': uuid,
+    'X-Forwarded-For': ip,
+  };
+
   // TODO: 실제 인증 구현 시 토큰 추가
   // const token = await getStoredToken();
   // if (token) {
-  //   return { ...API_CONFIG.HEADERS, Authorization: `Bearer ${token}` };
+  //   return { ...headers, Authorization: `Bearer ${token}` };
   // }
   
-  return API_CONFIG.HEADERS;
+  return headers;
 };
