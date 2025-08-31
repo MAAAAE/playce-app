@@ -231,13 +231,29 @@ const ReliableImage: React.FC<ReliableImageProps> = ({
     );
   }
 
+  // 스타일에서 borderRadius 추출
+  const getBorderRadius = () => {
+    if (Array.isArray(style)) {
+      for (const s of style) {
+        if (s && typeof s === 'object' && 'borderRadius' in s) {
+          return s.borderRadius || 0;
+        }
+      }
+    } else if (style && typeof style === 'object' && 'borderRadius' in style) {
+      return style.borderRadius || 0;
+    }
+    return 0;
+  };
+
+  const borderRadius = getBorderRadius();
+
   return (
     <View style={style}>
       <Image
         {...props}
         key={`${currentImageUri}-${retryCount}`} // 재시도마다 remount
         source={buildSource(currentImageUri, retryCount)}
-        style={[StyleSheet.absoluteFillObject]}
+        style={[StyleSheet.absoluteFillObject, { borderRadius }]}
         onLoad={handleImageLoad}
         onError={handleImageError}
         defaultSource={undefined}
@@ -247,7 +263,7 @@ const ReliableImage: React.FC<ReliableImageProps> = ({
       {!imageLoaded && (
         <Animated.View
           exiting={FadeOut.duration(300)}
-          style={[StyleSheet.absoluteFillObject, styles.placeholder]}
+          style={[StyleSheet.absoluteFillObject, styles.placeholder, { borderRadius }]}
         >
           <Ionicons name={fallbackIcon as any} size={fallbackIconSize} color={fallbackIconColor} />
         </Animated.View>
