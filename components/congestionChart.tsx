@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform, TouchableWithoutFeedback } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { ChartDataPoint } from '@/types/api';
@@ -125,6 +125,27 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
         },
     });
 
+    // 웹용 마우스 핸들러
+    const handleWebPointerMove = (event: any) => {
+        if (Platform.OS === 'web' && event.nativeEvent) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const relativeX = Math.max(0, Math.min(CHART_WIDTH, event.nativeEvent.clientX - rect.left));
+            const index = Math.round((relativeX / CHART_WIDTH) * (data.length - 1));
+            
+            if (index >= 0 && index < data.length && index !== selectedIndex) {
+                setSelectedIndex(index);
+                // 웹에서 햅틱 피드백
+                try {
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(10);
+                    }
+                } catch (e) {
+                    // 무시
+                }
+            }
+        }
+    };
+
     const currentLevel = data[selectedIndex]?.level || data[currentIndex]?.level || 0;
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
@@ -159,32 +180,64 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                     </View>
 
                     {/* Chart */}
-                    <PanGestureHandler onGestureEvent={gestureHandler}>
-                        <Animated.View style={styles.svgContainer}>
-                            <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-                                {/* 차트 선 */}
-                                <Path 
-                                    d={linePath} 
-                                    stroke="#FFFFFF" 
-                                    strokeWidth={2} 
-                                    fill="none" 
-                                    opacity={0.8}
-                                />
-                                {/* 선택된 점 */}
-                                {selectedPoint && (
-                                    <Circle
-                                        cx={selectedPoint.x}
-                                        cy={selectedPoint.y}
-                                        r={6}
-                                        fill="#FFFFFF"
-                                        stroke="#FFFFFF"
-                                        strokeWidth={2}
-                                        opacity={0.9}
+                    {Platform.OS === 'web' ? (
+                        <TouchableWithoutFeedback>
+                            <Animated.View 
+                                style={[styles.svgContainer, { cursor: 'pointer' as any }]}
+                                onPointerMove={handleWebPointerMove}
+                            >
+                                <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                                    {/* 차트 선 */}
+                                    <Path 
+                                        d={linePath} 
+                                        stroke="#FFFFFF" 
+                                        strokeWidth={2} 
+                                        fill="none" 
+                                        opacity={0.8}
                                     />
-                                )}
-                            </Svg>
-                        </Animated.View>
-                    </PanGestureHandler>
+                                    {/* 선택된 점 */}
+                                    {selectedPoint && (
+                                        <Circle
+                                            cx={selectedPoint.x}
+                                            cy={selectedPoint.y}
+                                            r={6}
+                                            fill="#FFFFFF"
+                                            stroke="#FFFFFF"
+                                            strokeWidth={2}
+                                            opacity={0.9}
+                                        />
+                                    )}
+                                </Svg>
+                            </Animated.View>
+                        </TouchableWithoutFeedback>
+                    ) : (
+                        <PanGestureHandler onGestureEvent={gestureHandler}>
+                            <Animated.View style={styles.svgContainer}>
+                                <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                                    {/* 차트 선 */}
+                                    <Path 
+                                        d={linePath} 
+                                        stroke="#FFFFFF" 
+                                        strokeWidth={2} 
+                                        fill="none" 
+                                        opacity={0.8}
+                                    />
+                                    {/* 선택된 점 */}
+                                    {selectedPoint && (
+                                        <Circle
+                                            cx={selectedPoint.x}
+                                            cy={selectedPoint.y}
+                                            r={6}
+                                            fill="#FFFFFF"
+                                            stroke="#FFFFFF"
+                                            strokeWidth={2}
+                                            opacity={0.9}
+                                        />
+                                    )}
+                                </Svg>
+                            </Animated.View>
+                        </PanGestureHandler>
+                    )}
 
                     <Text style={styles.footerText}>30-day crowd level forecast</Text>
                 </View>

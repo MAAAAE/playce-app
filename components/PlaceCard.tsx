@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform } from 'react-native';
 import { Colors } from '@/constants/Colors';
 
 interface PlaceCardProps {
@@ -10,7 +10,11 @@ interface PlaceCardProps {
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ name, imageUrl, onPress }) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity 
+      style={[styles.container, Platform.OS === 'web' ? { cursor: 'pointer' as any } : {}]} 
+      onPress={onPress} 
+      activeOpacity={0.85}
+    >
       <ImageBackground
         source={imageUrl ? { uri: imageUrl } : undefined}
         style={styles.imageBackground}
@@ -32,6 +36,14 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 16,
     overflow: 'hidden',
+    ...(Platform.OS === 'web' && {
+      // 웹에서 호버 효과를 위한 트랜지션
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      },
+    }),
   },
   imageBackground: {
     width: '100%',
@@ -54,6 +66,10 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    ...(Platform.OS === 'web' && {
+      // 웹에서 텍스트 선택 방지
+      userSelect: 'none' as any,
+    }),
   },
 });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import SearchBar from './SearchBar';
 import SearchSuggestions from './SearchSuggestions';
@@ -65,6 +65,11 @@ const MainContent: React.FC<MainContentProps> = ({
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.cardsContainer}
+              style={Platform.OS === 'web' ? { cursor: 'grab' as any } : {}}
+              {...(Platform.OS === 'web' && {
+                // 웹에서 마우스 드래그 스크롤을 더 자연스럽게
+                decelerationRate: 'normal',
+              })}
             >
               {popularPlaces.map((place, index) => (
                 <PlaceCard
@@ -86,6 +91,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    ...(Platform.OS === 'web' && {
+      // 웹에서 좀 더 여유 있는 패딩
+      paddingHorizontal: 24,
+    }),
   },
   contentCentered: {
     justifyContent: 'center',
@@ -108,6 +117,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.72,
     lineHeight: 45,
     fontFamily: 'Outfit-Medium',
+    ...(Platform.OS === 'web' && {
+      // 웹에서 텍스트 선택 방지
+      userSelect: 'none' as any,
+    }),
   },
   secondaryTitle: {
     color: Colors.secondaryText,
@@ -118,6 +131,10 @@ const styles = StyleSheet.create({
   cardsContainer: {
     paddingHorizontal: 0,
     gap: 8,
+    ...(Platform.OS === 'web' && {
+      // 웹에서 카드 간격 조정
+      gap: 12,
+    }),
   },
 });
 

@@ -11,7 +11,7 @@ const getApiUrl = () => {
     return `http://${ipAddress}:${port}`;
   }
   // Fallback for production or other environments
-  return 'https://your-production-api-url.com';
+  return 'http://localhost:8080';
 };
 
 export const EXPO_API_URL = getApiUrl();

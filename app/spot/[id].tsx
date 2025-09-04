@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ImageBackground, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -62,6 +62,18 @@ const SpotDetailScreen = () => {
             console.error("[Debug] Failed to fetch congestion data", error);
             setCongestionData([]); // Set to empty on error
           }
+        } else {
+          // 목업 데이터 생성 (30일치)
+          const mockData = Array.from({ length: 30 }, (_, index) => {
+            const baseDate = new Date();
+            baseDate.setDate(baseDate.getDate() + index);
+            const dateString = baseDate.toISOString().slice(0, 10).replace(/-/g, '');
+            return {
+              day: parseInt(dateString),
+              level: Math.floor(Math.random() * 100) // 0-100 사이 랜덤 값
+            };
+          });
+          setCongestionData(mockData);
         }
       };
     
@@ -181,8 +193,9 @@ const SpotDetailScreen = () => {
         <>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" />
-            <View style={styles.container}>
-                <Animated.View style={[styles.header, headerHeight, { backgroundColor: '#111111' }]}>
+            <View style={styles.outerContainer}>
+                <View style={styles.container}>
+                    <Animated.View style={[styles.header, headerHeight, { backgroundColor: '#111111' }]}>
                     <Animated.View style={[styles.imageContainer, headerBackgroundOpacity]}>
                         <ImageBackground 
                             source={{ uri: spotImageUrl }}
@@ -266,15 +279,27 @@ const SpotDetailScreen = () => {
                         />
                     </View>
                 </Animated.ScrollView>
+                </View>
             </View>
         </>
     );
 };
 
 const styles = StyleSheet.create({
+    outerContainer: {
+        flex: 1,
+        backgroundColor: '#111111',
+        ...(Platform.OS === 'web' && {
+            alignItems: 'center', // 웹에서 중앙 정렬
+        }),
+    },
     container: {
         flex: 1,
         backgroundColor: '#111111',
+        ...(Platform.OS === 'web' && {
+            maxWidth: 480, // 모바일웹처럼 최대 너비 제한
+            width: '100%',
+        }),
     },
     header: {
         position: 'absolute',
@@ -283,6 +308,9 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH,
         zIndex: 1000,
         overflow: 'hidden',
+        ...(Platform.OS === 'web' && {
+            width: '100%', // 웹에서는 컨테이너 너비에 맞춤
+        }),
     },
     headerBackground: {
         flex: 1,
@@ -317,6 +345,9 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit-Medium',
         textAlign: 'center',
         flex: 1,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     heroBackButtonContainer: {
         position: 'absolute',
@@ -341,12 +372,18 @@ const styles = StyleSheet.create({
         height: 44,
         justifyContent: 'center',
         alignItems: 'center',
+        ...(Platform.OS === 'web' && {
+            cursor: 'pointer' as any,
+        }),
     },
     backButton: {
         width: 44,
         height: 44,
         justifyContent: 'center',
         alignItems: 'center',
+        ...(Platform.OS === 'web' && {
+            cursor: 'pointer' as any,
+        }),
     },
     heroTitle: {
         color: '#FFFFFF',
@@ -354,6 +391,9 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit-Medium',
         letterSpacing: -0.48,
         lineHeight: 24,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     scrollView: {
         flex: 1,
@@ -365,6 +405,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#111111',
         paddingTop: 20,
         minHeight: '100%',
+        ...(Platform.OS === 'web' && {
+            paddingHorizontal: 4, // 웹에서 좌우 여백 추가
+        }),
     },
     bottomGradient: {
         position: 'absolute',

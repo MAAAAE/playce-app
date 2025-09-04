@@ -29,10 +29,22 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
 const responsiveBackground = `
 body {
-  background-color: #fff;
+  background-color: #111111;
+  margin: 0;
+  padding: 0;
 }
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #000;
+    background-color: #111111;
   }
-}`;
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #111111;
+  }
+}
+/* 웹에서 스플래시 화면 최소화 */
+#splash-screen {
+  display: none !important;
+}
+`;

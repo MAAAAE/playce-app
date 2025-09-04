@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform} from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Place } from '@/data/Data';
 import Animated, {FadeIn, FadeInDown, FadeOut} from 'react-native-reanimated';
@@ -54,7 +54,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ suggestions, isLo
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => (
                         <AnimatedTouchableOpacity
-                            style={styles.suggestionItem}
+                            style={[styles.suggestionItem, Platform.OS === 'web' ? { cursor: 'pointer' as any } : {}]}
                             entering={FadeInDown.duration(200).delay(index * 50)}
                             onPress={() => handlePlaceSelect(item)}
                         >
@@ -82,11 +82,22 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         overflow: 'hidden', // borderRadius가 자식 요소에 적용되도록
         maxHeight: 300,
+        ...(Platform.OS === 'web' && {
+            // 웹에서 그림자 효과 추가
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }),
     },
     suggestionItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
+        ...(Platform.OS === 'web' && {
+            // 웹에서 호버 효과
+            transition: 'background-color 0.2s ease',
+            ':hover': {
+                backgroundColor: 'rgba(255,255,255,0.05)',
+            },
+        }),
     },
     iconContainer: {
         marginRight: 15,
@@ -99,21 +110,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         fontFamily: 'Pretendard-SemiBold',
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     addressText: {
         color: Colors.searchBarPlaceholder,
         fontSize: 12,
         marginTop: 2,
         fontFamily: 'Pretendard-Regular',
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     loadingContainer: {
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20, // 로딩 인디케이터 주변에 여백 추가
         height: 100,
-
     },
-
 });
 
 export default SearchSuggestions;

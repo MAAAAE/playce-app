@@ -179,6 +179,10 @@ const styles = StyleSheet.create({
   safeAreaLike: {
     flex: 1,
     width: '100%',
+    ...(Platform.OS === 'web' && {
+      maxWidth: 480, // 모바일웹처럼 최대 너비 제한
+      alignSelf: 'center', // 중앙 정렬
+    }),
   },
   animatedContentWrapper: {
     flex: 1,

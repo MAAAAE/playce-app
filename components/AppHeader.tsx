@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Colors } from '@/constants/Colors';
 
 interface AppHeaderProps {
@@ -28,6 +28,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     fontFamily: 'Outfit-Medium',
+    ...(Platform.OS === 'web' && {
+      userSelect: 'none' as any,
+    }),
   },
 });
 

@@ -6,7 +6,8 @@ import {
   StatusBar, 
   TouchableOpacity,
   Dimensions,
-  Image
+  Image,
+  Platform
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,9 +90,10 @@ const PlaylistGenerationScreen = () => {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" />
       
-      <AppBackground style={styles.container}>
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+      <AppBackground style={styles.outerContainer}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={[styles.header, { paddingTop: insets.top }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleCancel}
@@ -182,14 +184,23 @@ const PlaylistGenerationScreen = () => {
             </TouchableOpacity>
           </Animated.View>
         )}
+        </View>
       </AppBackground>
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 480, // 모바일웹처럼 최대 너비 제한
+      alignSelf: 'center', // 중앙 정렬
+      width: '100%',
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -203,12 +214,18 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer' as any,
+    }),
   },
   title: {
     color: Colors.text,
     fontSize: 18,
     fontFamily: 'Outfit-Medium',
     textAlign: 'center',
+    ...(Platform.OS === 'web' && {
+      userSelect: 'none' as any,
+    }),
   },
   destinationContainer: {
     alignItems: 'center',
@@ -220,6 +237,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Pretendard-Regular',
     marginBottom: 8,
+    ...(Platform.OS === 'web' && {
+      userSelect: 'none' as any,
+    }),
   },
   destinationText: {
     color: Colors.text,
@@ -227,6 +247,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit-Medium',
     textAlign: 'center',
     marginBottom: 8,
+    ...(Platform.OS === 'web' && {
+      userSelect: 'none' as any,
+    }),
   },
   progressContainer: {
     paddingHorizontal: 20,
@@ -257,7 +280,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   songCard: {
-    width: SCREEN_WIDTH - 40,
+    width: Platform.OS === 'web' ? '100%' : SCREEN_WIDTH - 40, // 웹에서는 컨테이너 너비에 맞춤
+    maxWidth: Platform.OS === 'web' ? 440 : undefined, // 웹에서 최대 너비 제한
     backgroundColor: Colors.cardBg,
     padding: 20,
     borderRadius: 16,

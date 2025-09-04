@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Dimensions, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Colors } from '../constants/Colors';
 import ReliableImage from './ReliableImage';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ interface PlaylistProps {
 
 const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
     const [currentPage, setCurrentPage] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
     
     // 5개씩 그룹화
@@ -33,11 +34,35 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
     
     const handleScroll = (event: any) => {
         const contentOffset = event.nativeEvent.contentOffset;
-        const pageWidth = SCREEN_WIDTH - 60 + 20; // 페이지 너비 + 마진
+        const pageWidth = Platform.OS === 'web' ? 320 : SCREEN_WIDTH - 60 + 20; // 웹에서 조정된 페이지 너비
         
         // 현재 페이지 계산 (다음 페이지 미리보기를 고려한 계산)
         const pageNum = Math.round(contentOffset.x / pageWidth);
         setCurrentPage(pageNum);
+    };
+
+    // 웹용 마우스 드래그 핸들러들
+    const handleMouseDown = (event: any) => {
+        if (Platform.OS === 'web') {
+            setIsDragging(true);
+            event.preventDefault();
+        }
+    };
+
+    const handleMouseMove = (event: any) => {
+        if (Platform.OS === 'web' && isDragging && scrollViewRef.current) {
+            // 마우스 드래그로 스크롤 구현
+            const scrollView = scrollViewRef.current as any;
+            if (scrollView._component) {
+                scrollView._component.scrollLeft -= event.movementX;
+            }
+        }
+    };
+
+    const handleMouseUp = () => {
+        if (Platform.OS === 'web') {
+            setIsDragging(false);
+        }
     };
 
     const renderSongItem = (item: Song, index: number) => (
@@ -73,6 +98,7 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
             {pageData.map((song, index) => renderSongItem(song, index))}
         </View>
     );
+
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -88,11 +114,19 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
                     showsHorizontalScrollIndicator={false}
                     onScroll={handleScroll}
                     scrollEventThrottle={16}
-                    style={styles.scrollView}
+                    style={[styles.scrollView, Platform.OS === 'web' ? { cursor: isDragging ? 'grabbing' as any : 'grab' as any } : {}]}
                     contentContainerStyle={styles.scrollContent}
-                    snapToInterval={SCREEN_WIDTH - 60 + 20} // 페이지 너비 + 마진과 일치
+                    snapToInterval={Platform.OS === 'web' ? 320 : SCREEN_WIDTH - 60 + 20} // 웹에서 조정된 스냅 간격
                     snapToAlignment="start"
                     decelerationRate="fast"
+                    {...(Platform.OS === 'web' && {
+                        // 웹에서 마우스 드래그 스크롤을 더 자연스럽게
+                        decelerationRate: 'normal',
+                        onMouseDown: handleMouseDown,
+                        onMouseMove: handleMouseMove,
+                        onMouseUp: handleMouseUp,
+                        onMouseLeave: handleMouseUp,
+                    })}
                 >
                     {groupedSongs.map((pageData, pageIndex) => renderPage(pageData, pageIndex))}
                 </ScrollView>
@@ -118,96 +152,102 @@ const Playlist: React.FC<PlaylistProps> = ({ songs }) => {
 
 const styles = StyleSheet.create({
     container: {
-        gap: 10,
+        marginBottom: 40,
     },
     headerContainer: {
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        gap: 5,
+        marginBottom: 20,
     },
     title: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        fontFamily: 'Pretendard-Bold',
-        letterSpacing: -0.4,
-        lineHeight: 30,
+        color: Colors.text,
+        fontSize: 24,
+        fontWeight: 'bold',
+        fontFamily: 'Outfit-Medium',
+        marginBottom: 4,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     subtitle: {
-        color: '#B7B7B7',
-        fontSize: 16,
+        color: Colors.secondaryText,
+        fontSize: 14,
         fontFamily: 'Pretendard-Regular',
-        letterSpacing: -0.32,
-        lineHeight: 16,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     playlistContainer: {
-        paddingVertical: 10,
+        position: 'relative',
     },
     scrollView: {
-        height: 400, // 5개 아이템 * 80px
+        marginHorizontal: -20,
     },
     scrollContent: {
-        paddingRight: 20, // 마지막 페이지 이후 여백
+        paddingHorizontal: 20,
     },
     pageContainer: {
-        width: SCREEN_WIDTH - 60, // 다음 페이지가 더 많이 보이도록 너비 조정
+        width: Platform.OS === 'web' ? 320 : SCREEN_WIDTH - 60, // 웹에서 조정된 페이지 너비
         paddingHorizontal: 0,
-        paddingVertical: 10,
-        marginRight: 20, // 페이지 간격 줄임
+        paddingVertical: 8,
+        marginRight: 20,
     },
     songItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        height: 80,
-        gap: 20,
+        paddingHorizontal: 0,
+        height: 64,
+        gap: 12,
     },
     albumArt: {
-        width: 60,
-        height: 60,
-        backgroundColor: '#B7B7B7',
-        borderRadius: 16, // Figma 디자인에 맞게 조정
+        width: 48,
+        height: 48,
+        borderRadius: 6,
+        backgroundColor: Colors.searchBarBg,
     },
     textContainer: {
         flex: 1,
-        gap: 4,
-    },
-    menuButton: {
-        width: 44,
-        height: 44,
         justifyContent: 'center',
-        alignItems: 'center',
     },
     songTitle: {
-        color: '#E8E8E8',
-        fontSize: 18,
+        color: Colors.text,
+        fontSize: 15,
+        fontWeight: '600',
         fontFamily: 'Pretendard-SemiBold',
-        letterSpacing: -0.36,
-        lineHeight: 18,
+        marginBottom: 2,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
     },
     songArtist: {
-        color: '#E8E8E8',
-        fontSize: 14,
+        color: Colors.secondaryText,
+        fontSize: 13,
         fontFamily: 'Pretendard-Regular',
-        letterSpacing: -0.28,
-        lineHeight: 21,
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none' as any,
+        }),
+    },
+    menuButton: {
+        padding: 8,
+        ...(Platform.OS === 'web' && {
+            cursor: 'pointer' as any,
+        }),
     },
     paginationContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 20,
+        marginTop: 16,
         gap: 8,
     },
     paginationDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#B7B7B7',
-        opacity: 0.3,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
     },
     activePaginationDot: {
-        backgroundColor: '#1C86A0',
-        opacity: 1,
+        backgroundColor: Colors.text,
+        opacity: 0.8,
     },
 });
 
