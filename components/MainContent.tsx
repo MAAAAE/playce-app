@@ -18,6 +18,7 @@ interface MainContentProps {
   suggestions: Place[];
   isLoading: boolean;
   popularPlaces: Array<{ name: string; imageUrl: string }>;
+  searchText?: string; // 검색어 값을 추가
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -31,6 +32,7 @@ const MainContent: React.FC<MainContentProps> = ({
   suggestions,
   isLoading,
   popularPlaces,
+  searchText,
 }) => {
   return (
     <View style={[styles.content, !focused && styles.contentCentered]}>
@@ -49,6 +51,7 @@ const MainContent: React.FC<MainContentProps> = ({
           onBlur={onBlur}
           onChangeText={onChangeText}
           onSubmitEditing={onSubmitEditing}
+          value={searchText}
         />
         
         <SearchSuggestions

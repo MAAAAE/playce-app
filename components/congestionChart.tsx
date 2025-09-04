@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { ChartDataPoint } from '@/types/api';
@@ -102,7 +102,22 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
             if (index >= 0 && index < data.length && index !== lastHapticIndex.value) {
                 runOnJS(setSelectedIndex)(index);
                 lastHapticIndex.value = index;
-                runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+                
+                // 웹에서는 햅틱 피드백 대신 vibration API 사용하거나 생략
+                if (Platform.OS !== 'web') {
+                    runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+                } else {
+                    // 웹에서는 대안적 피드백 (진동 API가 있다면)
+                    runOnJS(() => {
+                        try {
+                            if ('vibrate' in navigator) {
+                                navigator.vibrate(10);
+                            }
+                        } catch (e) {
+                            // 무시
+                        }
+                    })();
+                }
             }
         },
         onEnd: () => {

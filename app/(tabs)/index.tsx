@@ -35,8 +35,13 @@ const MainScreen: React.FC = () => {
     bottomInsetSV.value = insets.bottom || 0;
   }, [insets.top, insets.bottom, topInsetSV, bottomInsetSV]);
 
-  // Derive target shift so that content never crosses safe area top
+  // Derive target shift so that content never crosses safe area top (웹에서는 비활성화)
   useDerivedValue(() => {
+    if (Platform.OS === 'web') {
+      // 웹에서는 키보드 애니메이션 계산하지 않음
+      return;
+    }
+    
     const topPadding = topInsetSV.value;
     const headerSpace = 46; // header height from AppHeader component
     const safeContentTop = topPadding + headerSpace;
@@ -52,9 +57,15 @@ const MainScreen: React.FC = () => {
     animatedShift.value = withTiming(targetShift, { duration: 300, easing: Easing.out(Easing.cubic) });
   });
 
-  const animatedKeyboardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -animatedShift.value }],
-  }));
+  const animatedKeyboardStyle = useAnimatedStyle(() => {
+    if (Platform.OS === 'web') {
+      // 웹에서는 키보드 애니메이션 없음
+      return {};
+    }
+    return {
+      transform: [{ translateY: -animatedShift.value }],
+    };
+  });
 
   // 인기 장소 데이터
   const popularPlaces = [
@@ -93,8 +104,13 @@ const MainScreen: React.FC = () => {
     performSearch(searchText);
   };
 
-  // Keyboard show/hide listeners with smooth animation
+  // Keyboard show/hide listeners with smooth animation (웹에서는 비활성화)
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      // 웹에서는 키보드 애니메이션 비활성화
+      return;
+    }
+    
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
@@ -140,6 +156,7 @@ const MainScreen: React.FC = () => {
                   suggestions={suggestions}
                   isLoading={isLoading}
                   popularPlaces={popularPlaces}
+                  searchText={searchText}
                 />
               </Animated.View>
             </View>
