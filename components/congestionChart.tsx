@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions, Platform, TouchableWithoutFeedback 
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { ChartDataPoint } from '@/types/api';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Text as SvgText } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useAnimatedGestureHandler,
@@ -16,9 +16,7 @@ interface SVGPoint {
     y: number;
 }
 
-// 차트의 크기를 정의
-const CHART_WIDTH = 303; // 피그마 디자인에 맞춤
-const CHART_HEIGHT = 80;
+const CHART_HEIGHT = 120;
 const VERTICAL_PADDING = 10; // 상하 여백 추가
 
 // 차트 데이터를 부드러운 곡선 SVG 경로 데이터로 변환하는 헬퍼 함수
@@ -72,18 +70,25 @@ interface Context extends Record<string, unknown> {
 }
 
 const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 0 }) => {
+    const [svgWidth, setSvgWidth] = useState(0);
     const [selectedIndex, setSelectedIndex] = useState(currentIndex);
     const translateX = useSharedValue(0);
     const lastHapticIndex = useSharedValue(currentIndex);
+
+    const onLayout = (event: any) => {
+        const { width } = event.nativeEvent.layout;
+        setSvgWidth(width - 32); // 16 padding on each side
+    };
+
     // data를 SVG 좌표로 변환
     const points = useMemo(() => {
-        if (data.length === 0) return [];
+        if (data.length === 0 || svgWidth === 0) return [];
         return data.map((point, index) => {
-            const x = (index / (data.length - 1)) * CHART_WIDTH;
+            const x = (index / (data.length - 1)) * svgWidth;
             const y = (CHART_HEIGHT - VERTICAL_PADDING * 2) - (point.level / 100) * (CHART_HEIGHT - VERTICAL_PADDING * 2) + VERTICAL_PADDING;
             return { x, y };
         });
-    }, [data]);
+    }, [data, svgWidth]);
 
     const linePath = useMemo(() => createSmoothPath(points), [points]);
 
@@ -96,8 +101,8 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
             translateX.value = context.startX + event.translationX;
             
             // X 좌표를 배열 인덱스로 변환
-            const relativeX = Math.max(0, Math.min(CHART_WIDTH, event.absoluteX - 56)); // 컨테이너 여백 고려 (20 + 16 + 20)
-            const index = Math.round((relativeX / CHART_WIDTH) * (data.length - 1));
+            const relativeX = Math.max(0, Math.min(svgWidth, event.absoluteX - 56)); // 컨테이너 여백 고려 (20 + 16 + 20)
+            const index = Math.round((relativeX / svgWidth) * (data.length - 1));
             
             if (index >= 0 && index < data.length && index !== lastHapticIndex.value) {
                 runOnJS(setSelectedIndex)(index);
@@ -129,8 +134,8 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const handleWebPointerMove = (event: any) => {
         if (Platform.OS === 'web' && event.nativeEvent) {
             const rect = event.currentTarget.getBoundingClientRect();
-            const relativeX = Math.max(0, Math.min(CHART_WIDTH, event.nativeEvent.clientX - rect.left));
-            const index = Math.round((relativeX / CHART_WIDTH) * (data.length - 1));
+            const relativeX = Math.max(0, Math.min(svgWidth, event.nativeEvent.clientX - rect.left));
+            const index = Math.round((relativeX / svgWidth) * (data.length - 1));
             
             if (index >= 0 && index < data.length && index !== selectedIndex) {
                 setSelectedIndex(index);
@@ -149,6 +154,15 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
     const currentLevel = data[selectedIndex]?.level || data[currentIndex]?.level || 0;
     const levelText = currentLevel < 40 ? 'Low' : currentLevel < 75 ? 'Medium' : 'High';
     const levelColor = currentLevel < 40 ? '#3EAC3A' : currentLevel < 75 ? '#FFD448' : '#FF5733';
+
+    const formatDateForBar = (dayNumber: number) => {
+        if (!dayNumber) return '';
+        const dayString = String(dayNumber);
+        if (dayString.length !== 8) return '';
+        const month = dayString.substring(4, 6);
+        const dayOfMonth = dayString.substring(6, 8);
+        return `${month}/${dayOfMonth}`;
+    };
 
     const formattedDate = useMemo(() => {
         const dayNumber = data[selectedIndex]?.day;
@@ -171,7 +185,7 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
             </View>
 
             <View style={styles.chartContainer}>
-                <View style={styles.chartBackground}>
+                <View style={styles.chartBackground} onLayout={onLayout}>
                     {/* Crowd Level Indicator */}
                     <View style={[styles.levelIndicator, { borderColor: levelColor }]}>
                         <Text style={styles.levelLabel}>crowd level</Text>
@@ -186,34 +200,60 @@ const CongestionChart: React.FC<CongestionChartProps> = ({ data, currentIndex = 
                                 style={[styles.svgContainer, { cursor: 'pointer' as any }]}
                                 onPointerMove={handleWebPointerMove}
                             >
-                                <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-                                    {/* 차트 선 */}
-                                    <Path 
-                                        d={linePath} 
-                                        stroke="#FFFFFF" 
-                                        strokeWidth={2} 
-                                        fill="none" 
-                                        opacity={0.8}
-                                    />
-                                    {/* 선택된 점 */}
-                                    {selectedPoint && (
-                                        <Circle
-                                            cx={selectedPoint.x}
-                                            cy={selectedPoint.y}
-                                            r={6}
-                                            fill="#FFFFFF"
-                                            stroke="#FFFFFF"
-                                            strokeWidth={2}
-                                            opacity={0.9}
-                                        />
-                                    )}
+                                <Svg width={svgWidth} height={CHART_HEIGHT}>
+                                    {data.map((point, index) => {
+                                        const slotWidth = svgWidth / data.length;
+                                        const barWidth = slotWidth * 0.8; // Use 80% of the slot for the bar
+                                        const x = index * slotWidth + (slotWidth - barWidth) / 2; // Center bar in slot
+
+                                        const barHeight = (point.level / 100) * (CHART_HEIGHT - VERTICAL_PADDING * 2 - 20); // -20 for date space
+                                        const y = (CHART_HEIGHT - VERTICAL_PADDING * 2 - 20) - barHeight + VERTICAL_PADDING;
+                                        const isSelected = index === selectedIndex;
+                                        const isHighBar = point.level > 90;
+
+                                        return (
+                                            <React.Fragment key={index}>
+                                                <Rect
+                                                    x={x}
+                                                    y={y}
+                                                    width={barWidth}
+                                                    height={barHeight}
+                                                    fill={isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+                                                    opacity={isSelected ? 1 : 0.7}
+                                                    rx={4}
+                                                />
+                                                {isSelected && (
+                                                    <SvgText
+                                                        x={x + barWidth / 2}
+                                                        y={isHighBar ? y + 15 : y - 5}
+                                                        fill={isHighBar ? '#000000' : '#FFFFFF'}
+                                                        fontSize="12"
+                                                        fontWeight="bold"
+                                                        textAnchor="middle"
+                                                    >
+                                                        {`${point.level.toFixed(0)}%`}
+                                                    </SvgText>
+                                                )}
+                                                <SvgText
+                                                    x={x + barWidth / 2}
+                                                    y={CHART_HEIGHT - 15}
+                                                    fill="rgba(255, 255, 255, 0.7)"
+                                                    fontSize="10"
+                                                    textAnchor="end"
+                                                    transform={`rotate(-45, ${x + barWidth / 2}, ${CHART_HEIGHT - 15})`}
+                                                >
+                                                    {formatDateForBar(point.day)}
+                                                </SvgText>
+                                            </React.Fragment>
+                                        );
+                                    })}
                                 </Svg>
                             </Animated.View>
                         </TouchableWithoutFeedback>
                     ) : (
                         <PanGestureHandler onGestureEvent={gestureHandler}>
                             <Animated.View style={styles.svgContainer}>
-                                <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+                                <Svg width={svgWidth} height={CHART_HEIGHT}>
                                     {/* 차트 선 */}
                                     <Path 
                                         d={linePath} 
@@ -275,8 +315,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20, // 하단 여백 추가
     },
     chartBackground: {
-        width: 335,
-        height: 240, // 높이를 220에서 240으로 증가
+        height: 300, // 높이를 280에서 300으로 증가
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderRadius: 16,
         borderWidth: 1,
@@ -319,7 +358,6 @@ const styles = StyleSheet.create({
         lineHeight: 9.375,
     },
     svgContainer: {
-        width: CHART_WIDTH,
         height: CHART_HEIGHT,
     },
     footerText: {
