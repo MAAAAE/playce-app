@@ -4,11 +4,11 @@ import { Colors } from '@/constants/Colors';
 
 interface PlaceCardProps {
   name: string;
-  imageUrl?: string;
+  image?: string;
   onPress?: () => void;
 }
 
-const PlaceCard: React.FC<PlaceCardProps> = ({ name, imageUrl, onPress }) => {
+const PlaceCard: React.FC<PlaceCardProps> = ({ name, image, onPress }) => {
   return (
     <TouchableOpacity 
       style={[styles.container, Platform.OS === 'web' ? { cursor: 'pointer' as any } : {}]} 
@@ -16,7 +16,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ name, imageUrl, onPress }) => {
       activeOpacity={0.85}
     >
       <ImageBackground
-        source={imageUrl ? { uri: imageUrl } : undefined}
+        source={image ? { uri: image } : undefined}
         style={styles.imageBackground}
         imageStyle={styles.image}
         resizeMode="cover"

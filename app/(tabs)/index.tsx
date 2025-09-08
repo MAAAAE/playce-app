@@ -68,12 +68,40 @@ const MainScreen: React.FC = () => {
   });
 
   // 인기 장소 데이터
-  const popularPlaces = [
-    { name: 'Gyeongbokgung', imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=250&fit=crop&q=80' },
-    { name: 'Bukchon', imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=250&fit=crop&q=80' },
-    { name: 'Gangnam', imageUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&h=250&fit=crop&q=80' },
-    { name: 'Hongdae', imageUrl: 'https://images.unsplash.com/photo-1574594723019-f47c3cbb7d6e?w=400&h=250&fit=crop&q=80' },
-    { name: 'Myeongdong', imageUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=250&fit=crop&q=80' },
+  const popularPlaces: Place[] = [
+    { id: '264337', name: 'Gyeongbokgung', address: '161 Sajik-ro, Jongno-gu, Seoul', image: 'http://tong.visitkorea.or.kr/cms/resource/94/3487594_image2_1.jpg', smallImage: 'http://tong.visitkorea.or.kr/cms/resource/94/3487594_image3_1.jpg', sigunguCode: '11110' },
+    {
+        "id": "561382",
+        "name": "Bukchon Hanok Village (북촌한옥마을)",
+        "address": "37 Gyedong-gil, Jongno-gu, Seoul",
+        "image": "http://tong.visitkorea.or.kr/cms/resource/04/3304404_image2_1.jpg",
+        "smallImage": "http://tong.visitkorea.or.kr/cms/resource/04/3304404_image3_1.jpg",
+        "sigunguCode": "11110"
+    },
+    {
+        "id": "264571",
+        "name": "Gangnam (강남)",
+        "address": "Yeoksam-dong, Gangnam-gu, Seoul",
+        "image": "http://tong.visitkorea.or.kr/cms/resource/08/1984608_image2_1.jpg",
+        "smallImage": "http://tong.visitkorea.or.kr/cms/resource/08/1984608_image3_1.jpg",
+        "sigunguCode": "11680"
+    },
+    {
+        "id": "1326972",
+        "name": "Hongdae (Hongik University Street) (홍대)",
+        "address": "20 Hongik-ro, Mapo-gu, Seoul",
+        "image": "",
+        "smallImage": "",
+        "sigunguCode": "11440"
+    },
+    {
+        "id": "264312",
+        "name": "Myeong-dong (명동)",
+        "address": "74, Myeongdong-gil, Jung-gu, Seoul",
+        "image": "http://tong.visitkorea.or.kr/cms/resource/85/2932485_image2_1.bmp",
+        "smallImage": "http://tong.visitkorea.or.kr/cms/resource/85/2932485_image3_1.bmp",
+        "sigunguCode": "11140"
+    }
   ];
 
   const onFocus = () => { handleFocus(); setFocused(true); };

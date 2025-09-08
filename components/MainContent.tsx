@@ -6,6 +6,7 @@ import SearchSuggestions from './SearchSuggestions';
 import PlaceCard from './PlaceCard';
 import Animated from 'react-native-reanimated';
 import { Place } from '@/data/Data';
+import { router } from 'expo-router';
 
 interface MainContentProps {
   focused: boolean;
@@ -17,7 +18,7 @@ interface MainContentProps {
   onSubmitEditing: () => void;
   suggestions: Place[];
   isLoading: boolean;
-  popularPlaces: Array<{ name: string; imageUrl: string }>;
+  popularPlaces: Place[];
   searchText?: string; // 검색어 값을 추가
 }
 
@@ -34,6 +35,19 @@ const MainContent: React.FC<MainContentProps> = ({
   popularPlaces,
   searchText,
 }) => {
+
+  const handlePlaceSelect = (place: Place) => {
+    // 스트리밍 플레이리스트 생성 페이지로 이동
+    router.push({
+      pathname: "/playlist-generation",
+      params: {
+        place: JSON.stringify(place),
+        season: "사계절",
+        playlistSize: "10", // 최소 5곡으로 수정
+      },
+    });
+  };
+
   return (
     <View style={[styles.content, !focused && styles.contentCentered]}>
       <Animated.View
@@ -75,8 +89,8 @@ const MainContent: React.FC<MainContentProps> = ({
                 <PlaceCard
                   key={index}
                   name={place.name}
-                  imageUrl={place.imageUrl}
-                  onPress={() => console.log(`Navigate to ${place.name}`)}
+                  image={place.image}
+                  onPress={() => handlePlaceSelect(place)}
                 />
               ))}
             </ScrollView>
