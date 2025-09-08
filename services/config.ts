@@ -21,7 +21,7 @@ export const API_CONFIG = {
   BASE_URL: {
     development: EXPO_API_URL,
     staging: 'https://staging-api.playce.com',
-    production: 'https://api.playce.com',
+    production: '', // Nginx 프록시를 사용하므로 상대 경로로 설정
   },
   
   // API 버전
@@ -45,10 +45,8 @@ export const getEnvironment = (): keyof typeof API_CONFIG.BASE_URL => {
   }
   
   // TODO: 실제 배포 시에는 환경 변수로 구분
-  // const env = process.env.EXPO_PUBLIC_ENV || 'production';
-  // return env as keyof typeof API_CONFIG.BASE_URL;
-  
-  return 'production';
+  const env = process.env.EXPO_PUBLIC_ENV || 'production';
+  return env as keyof typeof API_CONFIG.BASE_URL;
 };
 
 // 베이스 URL 가져오기

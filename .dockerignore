@@ -1,0 +1,77 @@
+# flyctl launch added from .gitignore
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+**/node_modules
+
+# Expo
+**/.expo
+**/dist
+**/web-build
+**/expo-env.d.ts
+
+# Native
+**/.kotlin
+**/*.orig.*
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+
+# Metro
+**/.metro-health-check*
+
+# debug
+**/npm-debug.*
+**/yarn-debug.*
+**/yarn-error.*
+
+# macOS
+**/.DS_Store
+**/*.pem
+
+# local env files
+**/.env*.local
+
+# typescript
+**/*.tsbuildinfo
+
+# flyctl launch added from .idea/.gitignore
+# Default ignored files
+.idea/shelf
+.idea/workspace.xml
+# Editor-based HTTP Client requests
+.idea/httpRequests
+# Environment-dependent path to Maven home directory
+.idea/mavenHomeManager.xml
+# Datasource local storage ignored files
+.idea/dataSources
+.idea/dataSources.local.xml
+
+# flyctl launch added from playce-web/.gitignore
+# Logs
+playce-web/**/logs
+playce-web/**/*.log
+playce-web/**/npm-debug.log*
+playce-web/**/yarn-debug.log*
+playce-web/**/yarn-error.log*
+playce-web/**/pnpm-debug.log*
+playce-web/**/lerna-debug.log*
+
+playce-web/**/node_modules
+playce-web/**/dist
+playce-web/**/dist-ssr
+playce-web/**/*.local
+
+# Editor directories and files
+playce-web/**/.vscode/*
+!playce-web/**/.vscode/extensions.json
+playce-web/**/.idea
+playce-web/**/.DS_Store
+playce-web/**/*.suo
+playce-web/**/*.ntvs*
+playce-web/**/*.njsproj
+playce-web/**/*.sln
+playce-web/**/*.sw?
+fly.toml
