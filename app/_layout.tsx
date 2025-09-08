@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ImageBackground, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, StatusBar, Platform } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
 import { Asset } from 'expo-asset';
@@ -124,7 +124,15 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      {isSplashFinished ? <RootLayoutNav /> : <SplashScreenComponent />}
+      {isSplashFinished ? (
+        <RootLayoutNav />
+      ) : (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
+          <View style={{ width: 1024, height: 1536 }}>
+            <SplashScreenComponent />
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -151,6 +159,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+    })
   },
   container: {
     flex: 1,

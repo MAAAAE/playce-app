@@ -29,7 +29,12 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#ffffff"
+      }
     },
     "plugins": [
       "expo-router",
